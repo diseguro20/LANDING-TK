@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bancas Grátis - Multiplique seus Ganhos sem Gastar Nada!</title>
+  <meta name="description" content="Ganhe bancas de apostas 100% gratuitas para lucrar conosco sem depositar um real. Escolha as casas onde você ainda não tem conta e comece agora!">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top Alert Bar -->
+  <div class="alert-bar" id="alert-bar">
+    <div class="alert-content">
+      <i class="fa-solid fa-fire-flame-simple animate-pulse"></i>
+      <span>ATENÇÃO: ÚLTIMAS VAGAS PARA HOJE! CRONÔMETRO ATIVO:</span>
+      <span class="timer" id="countdown-timer">14:59</span>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="glow-container">
+      <div class="glow-orb primary-glow"></div>
+      <div class="glow-orb secondary-glow"></div>
+    </div>
+    
+    <div class="container">
+      <div class="badge-exclusive">
+        <i class="fa-solid fa-circle-check"></i> MÉTODO COMPROVADO - 100% SEM RISCO
+      </div>
+      
+      <h1>COMO GANHAR ATÉ <span class="highlight-text-neon" id="hero-max-value">R$ 300,00</span> HOJE SEM GASTAR 1 REAL DO SEU BOLSO!</h1>
+      
+      <p class="subtitle">
+        Nós damos as <strong>bancas grátis</strong> para você jogar nas melhores casas de apostas e lucrar com nossos sinais de alta assertividade. Você não gasta nada!
+      </p>
+      
+      <div class="instruction-box">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Selecione abaixo as casas de apostas onde você <strong>ainda NÃO tem conta</strong> criada. Quanto mais casas marcar, mais bancas grátis você resgata!</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Config Section -->
+  <main class="interactive-section">
+    <div class="container">
+      
+      <!-- Grid of betting houses -->
+      <div class="houses-grid" id="houses-container">
+        <!-- Rendered dynamically by main.js -->
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Carregando casas disponíveis...</p>
+        </div>
+      </div>
+      
+      <!-- Dynamic Estimator Dashboard -->
+      <div class="estimator-card">
+        <div class="estimator-header">
+          <h3>SEU ACÚMULO DE BANCAS E GANHOS:</h3>
+        </div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+          <span class="progress-percent" id="progress-percent">0%</span>
+        </div>
+        
+        <div class="estimator-stats">
+          <div class="stat-box">
+            <span class="stat-label">Bancas a Resgatar</span>
+            <span class="stat-val" id="selected-count">0</span>
+          </div>
+          <div class="stat-box main-stat">
+            <span class="stat-label">Lucro Estimado</span>
+            <span class="stat-val neon-green" id="estimated-profit">R$ 0,00</span>
+          </div>
+        </div>
+
+        <!-- Pulse CTA Button -->
+        <div class="cta-container">
+          <a href="#" class="btn-cta disabled" id="btn-whatsapp" target="_blank">
+            <i class="fa-brands fa-whatsapp"></i>
+            RESGATAR MINHAS BANCAS NO WHATSAPP
+            <span class="pulse-ring"></span>
+          </a>
+          <p class="cta-helper" id="cta-helper-text">Selecione pelo menos 1 casa acima para liberar seu link do WhatsApp!</p>
+        </div>
+      </div>
+      
+    </div>
+  </main>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-title">COMO FUNCIONA O NOSSO MÉTODO?</h2>
+      <p class="section-subtitle">Siga o passo a passo e garanta seu PIX sem risco algum</p>
+      
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Marque as Casas</h3>
+          <p>Selecione nesta página as casas de apostas onde você não possui conta registrada.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Entre no WhatsApp</h3>
+          <p>Clique no botão acima para ir direto ao nosso grupo vip gratuito de sinais.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Receba a Banca</h3>
+          <p>Nossa equipe vai passar o passo a passo no grupo para ativar sua banca grátis sem depositar nada.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <h3>Lucro no PIX</h3>
+          <p>Siga os sinais dos nossos especialistas no grupo, aposte com a banca grátis e saque o lucro no Pix.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Proof Section -->
+  <section class="testimonials-section">
+    <div class="container">
+      <h2 class="section-title">QUEM FAZ, COMPROVA! 🔥</h2>
+      <p class="section-subtitle">Veja os prints de saques e feedbacks recentes de quem já usou as bancas grátis</p>
+      
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="user-info">
+            <div class="user-avatar" style="background-color: #8a2be2;">TH</div>
+            <div>
+              <h4>Thiago Henrique</h4>
+              <span class="user-verified"><i class="fa-solid fa-circle-check"></i> Conta Verificada</span>
+            </div>
+            <div class="stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+          <p class="testimonial-text">"Pensei que era golpe, mas marquei a Sportingbet e a Superbet. Entrei no grupo e me mandaram o esquema. Ganhei R$ 180 na primeira tarde sem por um real do meu bolso. Sacado via PIX!"</p>
+          <div class="pix-badge">
+            <i class="fa-solid fa-wallet"></i> Recebeu PIX de R$ 180,00
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="user-info">
+            <div class="user-avatar" style="background-color: #ff9900;">MA</div>
+            <div>
+              <h4>Mariana Alencar</h4>
+              <span class="user-verified"><i class="fa-solid fa-circle-check"></i> Conta Verificada</span>
+            </div>
+            <div class="stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+          <p class="testimonial-text">"Não tinha conta na Betboom nem na Donald Bet. Fiz o cadastro pelas bancas que o pessoal passou lá no whats e lucrei R$ 240 seguindo as dicas do robô deles. Melhor grupo de todos."</p>
+          <div class="pix-badge">
+            <i class="fa-solid fa-wallet"></i> Recebeu PIX de R$ 240,00
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="user-info">
+            <div class="user-avatar" style="background-color: #00ff66; color: #000;">RF</div>
+            <div>
+              <h4>Rodrigo Faria</h4>
+              <span class="user-verified"><i class="fa-solid fa-circle-check"></i> Conta Verificada</span>
+            </div>
+            <div class="stars">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+          <p class="testimonial-text">"Marquei todas as casas porque não tinha conta em quase nenhuma. Resgatei um total de R$ 280 em bancas e seguindo os sinais do admin fechei a semana com R$ 740 limpo no pix. Vale muito a pena."</p>
+          <div class="pix-badge">
+            <i class="fa-solid fa-wallet"></i> Recebeu PIX de R$ 740,00
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="container text-center">
+      <div class="footer-logo">
+        <i class="fa-solid fa-circle-dollar-to-slot"></i> LUCRO MÁXIMO
+      </div>
+      <p class="footer-text">
+        Este site e os serviços oferecidos não têm vinculação ou associação direta com a empresa Meta, WhatsApp Inc., ou as marcas comerciais das casas de apostas citadas. O jogo pode gerar dependência e deve ser praticado como entretenimento responsável. Proibido para menores de 18 anos.
+      </p>
+      <p class="footer-copy">&copy; 2026 Lucro Máximo. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/main.js"></script>
+</body>
+</html>

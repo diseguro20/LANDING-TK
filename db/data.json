@@ -1,0 +1,46 @@
+{
+  "whatsappUrl": "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
+  "adminPassword": "admin",
+  "houses": [
+    {
+      "id": "1",
+      "name": "SUPERBET",
+      "emoji": "🔘",
+      "color": "#f15a24",
+      "value": 50,
+      "active": true
+    },
+    {
+      "id": "2",
+      "name": "SPORTINGBET",
+      "emoji": "🔴",
+      "color": "#0055a5",
+      "value": 50,
+      "active": true
+    },
+    {
+      "id": "3",
+      "name": "Betboom",
+      "emoji": "💥",
+      "color": "#ffdd00",
+      "value": 60,
+      "active": true
+    },
+    {
+      "id": "4",
+      "name": "Donald Bet",
+      "emoji": "🦆",
+      "color": "#ff9900",
+      "value": 50,
+      "active": true
+    },
+    {
+      "id": "5",
+      "name": "BETBET",
+      "emoji": "🟣",
+      "color": "#8a2be2",
+      "value": 70,
+      "active": true
+    }
+  ]
+}

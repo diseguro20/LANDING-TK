@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Lucro Máximo</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Login Section Overlay -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <i class="fa-solid fa-lock-open"></i>
+        <h2>Painel Administrativo</h2>
+        <p>Acesse com a sua senha de segurança</p>
+      </div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="password-input">Senha de Acesso</label>
+          <div class="password-wrapper">
+            <input type="password" id="password-input" placeholder="Digite a senha..." required autocomplete="current-password">
+            <button type="button" id="toggle-password-view">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div id="login-error" class="error-alert hide">Senha incorreta. Tente novamente.</div>
+        <button type="submit" class="btn-primary btn-block">ENTRAR NO PAINEL</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard Main Layout -->
+  <div id="dashboard-wrapper" class="dashboard-wrapper hide">
+    
+    <!-- Sidebar / Header -->
+    <header class="admin-header">
+      <div class="container header-container">
+        <div class="admin-brand">
+          <i class="fa-solid fa-gauge-high"></i>
+          <h1>Painel Admin <span>Lucro Máximo</span></h1>
+        </div>
+        <div class="admin-actions">
+          <a href="/" target="_blank" class="btn-secondary"><i class="fa-solid fa-eye"></i> Ver Site</a>
+          <button id="btn-logout" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="admin-content">
+      <div class="container">
+        
+        <!-- Grid layout for configs and list -->
+        <div class="admin-grid">
+          
+          <!-- Column 1: Configs and Add House -->
+          <div class="admin-col">
+            
+            <!-- Card 1: Link and Admin Config -->
+            <div class="card">
+              <div class="card-header">
+                <i class="fa-solid fa-gear"></i>
+                <h2>Configurações Gerais</h2>
+              </div>
+              <div class="card-body">
+                <form id="general-config-form">
+                  <div class="form-group">
+                    <label for="whatsapp-url-input">Link do Grupo do WhatsApp</label>
+                    <input type="url" id="whatsapp-url-input" placeholder="https://chat.whatsapp.com/..." required>
+                    <small class="form-helper">Os leads serão direcionados para este link ao clicarem no botão da Landing Page.</small>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="admin-password-input">Nova Senha do Painel (opcional)</label>
+                    <input type="password" id="admin-password-input" placeholder="Deixe em branco para manter a atual">
+                    <small class="form-helper">Altere a senha de acesso a este painel administrativo.</small>
+                  </div>
+                  
+                  <button type="submit" class="btn-success"><i class="fa-solid fa-floppy-disk"></i> Salvar Configurações</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Card 2: Add New House -->
+            <div class="card mt-20">
+              <div class="card-header">
+                <i class="fa-solid fa-circle-plus"></i>
+                <h2>Adicionar Casa de Apostas</h2>
+              </div>
+              <div class="card-body">
+                <form id="add-house-form">
+                  <div class="form-group">
+                    <label for="house-name-input">Nome da Casa</label>
+                    <input type="text" id="house-name-input" placeholder="Ex: BETANO" required>
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group col-6">
+                      <label for="house-emoji-input">Emoji / Ícone</label>
+                      <input type="text" id="house-emoji-input" placeholder="Ex: 🔘 ou 💥" required>
+                    </div>
+                    <div class="form-group col-6">
+                      <label for="house-color-input">Cor de Destaque</label>
+                      <div class="color-picker-wrapper">
+                        <input type="color" id="house-color-input" value="#00ff66">
+                        <input type="text" id="house-color-hex" value="#00ff66" placeholder="#00ff66">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="house-value-input">Valor Estimado da Banca (R$)</label>
+                    <input type="number" id="house-value-input" min="1" step="any" placeholder="Ex: 50" required>
+                  </div>
+
+                  <div class="form-group checkbox-group">
+                    <input type="checkbox" id="house-active-input" checked>
+                    <label for="house-active-input">Ativar Casa de Aposta (exibir na LP)</label>
+                  </div>
+                  
+                  <button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i> Cadastrar Casa</button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 2: Houses List -->
+          <div class="admin-col">
+            <div class="card">
+              <div class="card-header list-header">
+                <div>
+                  <i class="fa-solid fa-list-check"></i>
+                  <h2>Casas Cadastradas</h2>
+                </div>
+                <span class="badge" id="houses-total-badge">0</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="houses-table">
+                    <thead>
+                      <tr>
+                        <th>Emoji</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th class="text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admin-houses-tbody">
+                      <!-- Loaded dynamically -->
+                      <tr>
+                        <td colspan="5" class="text-center py-20">Carregando casas de apostas...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit House Modal -->
+  <div id="edit-modal" class="modal-overlay hide">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Editar Casa de Aposta</h2>
+        <button id="close-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-house-form">
+          <input type="hidden" id="edit-house-id">
+          
+          <div class="form-group">
+            <label for="edit-house-name">Nome da Casa</label>
+            <input type="text" id="edit-house-name" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="edit-house-emoji">Emoji / Ícone</label>
+              <input type="text" id="edit-house-emoji" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="edit-house-color">Cor de Destaque</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="edit-house-color">
+                <input type="text" id="edit-house-color-hex">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-house-value">Valor Estimado da Banca (R$)</label>
+            <input type="number" id="edit-house-value" min="1" step="any" required>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="edit-house-active">
+            <label for="edit-house-active">Exibir na Landing Page (Ativo)</label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancel-edit-btn" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-success">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast hide"></div>
+
+  <!-- Scripts -->
+  <script src="/js/admin.js"></script>
+</body>
+</html>
