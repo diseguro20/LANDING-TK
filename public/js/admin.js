@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const generalConfigForm = document.getElementById('general-config-form');
   const whatsappUrlInput = document.getElementById('whatsapp-url-input');
   const adminPasswordInput = document.getElementById('admin-password-input');
+  const headlineValueInput = document.getElementById('headline-value-input');
   
   // Add House Form
   const addHouseForm = document.getElementById('add-house-form');
@@ -148,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = await response.json();
       whatsappUrlInput.value = data.whatsappUrl;
+      headlineValueInput.value = data.headlineValue || 300;
       housesData = data.houses || [];
       
       housesTotalBadge.textContent = housesData.length;
@@ -210,8 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const whatsappUrl = whatsappUrlInput.value;
     const adminPassword = adminPasswordInput.value;
+    const headlineValue = headlineValueInput.value;
     
-    const payload = { whatsappUrl };
+    const payload = { whatsappUrl, headlineValue };
     if (adminPassword.trim() !== '') {
       payload.adminPassword = adminPassword.trim();
     }

@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let whatsappBaseUrl = '';
   let availableHouses = [];
   let selectedHouseIds = new Set();
+  let headlinePromoValue = 300;
 
   // Fetch initial data
   async function loadLandingData() {
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       whatsappBaseUrl = data.whatsappUrl;
       availableHouses = data.houses;
+      headlinePromoValue = data.headlineValue || 300;
 
       renderHouses();
       updateCalculations();
@@ -145,6 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update Hero section max potential text dynamically
   function updateHeroTitleValue() {
+    if (headlinePromoValue) {
+      heroMaxValue.textContent = `R$ ${Number(headlinePromoValue).toFixed(2)}`;
+      return;
+    }
+    
     if (availableHouses.length === 0) return;
     
     // Max potential = sum of all + max combo bonus

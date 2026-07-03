@@ -1,6 +1,7 @@
 {
   "whatsappUrl": "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
   "adminPassword": "admin",
+  "headlineValue": 300,
   "houses": [
     {
       "id": "1",

@@ -76,6 +76,7 @@ app.get('/api/data', (req, res) => {
   const publicHouses = data.houses.filter(h => h.active !== false);
   res.json({
     whatsappUrl: data.whatsappUrl,
+    headlineValue: data.headlineValue || 300,
     houses: publicHouses
   });
 });
@@ -106,7 +107,7 @@ app.get('/api/admin/data', authMiddleware, (req, res) => {
 
 // Update global config (WhatsApp Link and Admin Password)
 app.post('/api/admin/config', authMiddleware, (req, res) => {
-  const { whatsappUrl, adminPassword } = req.body;
+  const { whatsappUrl, adminPassword, headlineValue } = req.body;
   
   if (!whatsappUrl) {
     return res.status(400).json({ error: 'O link do WhatsApp é obrigatório.' });
@@ -117,6 +118,10 @@ app.post('/api/admin/config', authMiddleware, (req, res) => {
   
   if (adminPassword && adminPassword.trim() !== '') {
     data.adminPassword = adminPassword.trim();
+  }
+  
+  if (headlineValue !== undefined) {
+    data.headlineValue = Number(headlineValue);
   }
   
   if (writeData(data)) {
