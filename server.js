@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
+const { Client } = require('pg');
 
 // Load environment variables (.env file)
 dotenv.config();
@@ -82,6 +83,76 @@ function writeLocalDataFile(data) {
   } catch (error) {
     console.error("Error writing data.json:", error);
     return false;
+  }
+}
+
+// -------------------------------------------------------------
+// DATABASE MIGRATIONS (Auto-run on startup)
+// -------------------------------------------------------------
+async function runDbMigrations() {
+  if (!isSupabaseConfigured) {
+    console.log("Database: Skipping startup migrations (Development Mode).");
+    return;
+  }
+  
+  const dbPassword = process.env.SUPABASE_DB_PASSWORD;
+  if (!dbPassword) {
+    console.log("Database: Warning! SUPABASE_DB_PASSWORD environment variable not set. Startup migrations skipped.");
+    return;
+  }
+  
+  let projectRef = '';
+  try {
+    const urlObj = new URL(supabaseUrl);
+    projectRef = urlObj.hostname.split('.')[0];
+  } catch(e) {
+    console.error("Database: Could not parse project reference from SUPABASE_URL:", e);
+    return;
+  }
+  
+  const client = new Client({
+    host: `db.${projectRef}.supabase.co`,
+    port: 5432,
+    user: 'postgres',
+    password: dbPassword,
+    database: 'postgres',
+    ssl: { rejectUnauthorized: false }
+  });
+  
+  try {
+    console.log(`Database: Connecting directly to run startup migrations...`);
+    await client.connect();
+    
+    const sqlFilePath = path.join(__dirname, 'schema.sql');
+    if (!fs.existsSync(sqlFilePath)) {
+      console.log("Database: Warning! schema.sql not found at project root. Skipping migrations.");
+      await client.end();
+      return;
+    }
+    
+    const sqlScript = fs.readFileSync(sqlFilePath, 'utf8');
+    const statements = sqlScript.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    
+    console.log(`Database: Running DDL script (${statements.length} statements)...`);
+    let successCount = 0;
+    
+    for (const stmt of statements) {
+      if (stmt.startsWith('--') && !stmt.includes('\n')) continue;
+      try {
+        await client.query(stmt);
+        successCount++;
+      } catch (err) {
+        // Statements like ALTER TABLE or ADD COLUMN fail safely if already applied.
+        // We catch them and keep running the next queries.
+      }
+    }
+    
+    console.log(`Database: Startup migrations finished. Applied ${successCount} statements successfully.`);
+    await client.end();
+  } catch (err) {
+    console.log("Database Warning: Could not run startup migrations directly (usually due to local network/IPv6 block). If in production on Vercel, ensure SUPABASE_DB_PASSWORD is set in Vercel.");
+    console.log(`Database Warning Details: ${err.message}`);
+    try { await client.end(); } catch(e){}
   }
 }
 
@@ -268,7 +339,6 @@ async function saveDbConfig(userId, payload) {
     if (payload.operators !== undefined) updates.operators = payload.operators;
     if (payload.statuses !== undefined) updates.statuses = payload.statuses;
 
-    // Check if config row exists
     const { data } = await supabase.from('configs').select('user_id').eq('user_id', userId).maybeSingle();
     
     let error;
@@ -400,7 +470,6 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
   const offset = (page - 1) * limit;
   
   if (isSupabaseConfigured) {
-    // 1. Fetch total counts for metrics/pagination
     let baseQuery = supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId);
     if (operator) baseQuery = baseQuery.eq('operator', operator);
     if (status) baseQuery = baseQuery.eq('status', status);
@@ -414,7 +483,6 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
     const countRes = await baseQuery;
     const totalCount = countRes.count || 0;
 
-    // 2. Fetch paginated records
     let query = supabase.from('leads').select('*').eq('user_id', userId);
     if (operator) query = query.eq('operator', operator);
     if (status) query = query.eq('status', status);
@@ -472,7 +540,6 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
       );
     }
     
-    // Sort desc
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     const totalCount = filtered.length;
@@ -495,7 +562,6 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
   }
 }
 
-// Metrics for the entire database filtered (not paginated)
 async function getDbLeadsMetrics(userId, filters = {}) {
   const { search, operator, status, isClosed } = filters;
   
@@ -704,7 +770,6 @@ app.post('/api/login', async (req, res) => {
   try {
     const user = await getUserByUsername(username);
     if (user && user.password === password) {
-      // Return token in the format "userId:username"
       res.json({ success: true, token: `${user.id}:${user.username}` });
     } else {
       res.status(401).json({ error: 'Usuário ou senha incorretos.' });
@@ -732,7 +797,7 @@ app.get('/api/admin/data', authMiddleware, async (req, res) => {
       operators: config.operators,
       statuses: config.statuses,
       houses: houses,
-      username: req.username // lets UI know if they are superadmin 'admin'
+      username: req.username
     });
   } catch (err) {
     console.error(err);
@@ -746,7 +811,7 @@ app.post('/api/admin/config', authMiddleware, async (req, res) => {
     whatsappUrl, headlineValue,
     minHousesForBonus, opValuePerCpa, opBonus,
     leadValuePerCpa, leadBonus, operators, statuses,
-    adminPassword // password changes
+    adminPassword
   } = req.body;
   
   if (!whatsappUrl) {
@@ -761,7 +826,6 @@ app.post('/api/admin/config', authMiddleware, async (req, res) => {
     });
     
     if (success) {
-      // If password update requested, update users table
       if (adminPassword && adminPassword.trim() !== '') {
         if (isSupabaseConfigured) {
           await supabase.from('users').update({ password: adminPassword.trim() }).eq('id', req.userId);
@@ -841,14 +905,12 @@ app.get('/api/admin/leads', authMiddleware, async (req, res) => {
   const limit = Number(req.query.limit || 50);
   
   try {
-    // 1. Get filtered paginated leads
     const { leads, totalCount } = await getDbLeads(
       req.userId, 
       { search, operator, status, isClosed },
       { page, limit }
     );
     
-    // 2. Get full filtered metrics (for the stats cards)
     const metrics = await getDbLeadsMetrics(req.userId, { search, operator, status, isClosed });
     
     res.json({
@@ -955,7 +1017,6 @@ app.get('/api/admin/users', authMiddleware, async (req, res) => {
   
   try {
     const users = await getAllUsersList();
-    // Filter out the superadmin itself from the manageable list
     const filteredUsers = users.filter(u => u.username !== 'admin');
     res.json(filteredUsers);
   } catch (err) {
@@ -975,19 +1036,16 @@ app.post('/api/admin/users', authMiddleware, async (req, res) => {
   }
 
   try {
-    // Check if user exists
     const existing = await getUserByUsername(username);
     if (existing) {
       return res.status(400).json({ error: 'Este nome de usuário já está em uso.' });
     }
 
-    // Create user
     const newUser = await createDbUser(username, password);
     if (!newUser) {
       return res.status(500).json({ error: 'Erro ao criar o usuário.' });
     }
 
-    // Create default configs for new user
     await saveDbConfig(newUser.id, {
       whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
       headlineValue: 300,
@@ -1000,7 +1058,6 @@ app.post('/api/admin/users', authMiddleware, async (req, res) => {
       statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
     });
 
-    // Create default houses for new user
     const defaultHouses = [
       { id: "1", name: "SUPERBET", emoji: "🔘", color: "#f15a24", value: 50, active: true },
       { id: "2", name: "SPORTINGBET", emoji: "🔴", color: "#0055a5", value: 50, active: true },
@@ -1048,14 +1105,20 @@ app.get('*all', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Local port execution
+// Local port execution & migration triggers
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   const PORT = process.env.PORT || 3001;
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Landing Page: http://localhost:${PORT}`);
     console.log(`Admin Panel: http://localhost:${PORT}/admin.html`);
+    
+    // Run migrations automatically on local server startup
+    await runDbMigrations();
   });
+} else {
+  // On Vercel startup, execute database schema migrations automatically
+  runDbMigrations().catch(err => console.error("Vercel startup migration failed:", err));
 }
 
 module.exports = app;
