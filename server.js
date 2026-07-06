@@ -40,13 +40,21 @@ function readLocalDataFile() {
         whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
         adminPassword: "admin",
         headlineValue: 300,
+        minHousesForBonus: 8,
+        opValuePerCpa: 3.12,
+        opBonus: 25.00,
+        leadValuePerCpa: 6.00,
+        leadBonus: 100.00,
+        operators: ["Takesh", "SK", "Deio", "TKAY", "Tito", "JEAN", "kaio", "thales", "marmelow", "maca"],
+        statuses: ["⏳ Em Andamento", "⏸️ Aguardando Lead", "✅ Concluído", "❌ Desistiu / Sumiu", "🚫 Golpe / Erro", "💢 Saque Não Caiu"],
         houses: [
           { "id": "1", "name": "SUPERBET", "emoji": "🔘", "color": "#f15a24", "value": 50, "active": true },
           { "id": "2", "name": "SPORTINGBET", "emoji": "🔴", "color": "#0055a5", "value": 50, "active": true },
           { "id": "3", "name": "Betboom", "emoji": "💥", "color": "#ffdd00", "value": 60, "active": true },
           { "id": "4", "name": "Donald Bet", "emoji": "🦆", "color": "#ff9900", "value": 50, "active": true },
           { "id": "5", "name": "BETBET", "emoji": "🟣", "color": "#8a2be2", "value": 70, "active": true }
-        ]
+        ],
+        leads: []
       };
       fs.writeFileSync(LOCAL_DATA_FILE, JSON.stringify(defaultData, null, 2));
       return defaultData;
@@ -59,7 +67,15 @@ function readLocalDataFile() {
       whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
       adminPassword: "admin",
       headlineValue: 300,
-      houses: []
+      minHousesForBonus: 8,
+      opValuePerCpa: 3.12,
+      opBonus: 25.00,
+      leadValuePerCpa: 6.00,
+      leadBonus: 100.00,
+      operators: [],
+      statuses: [],
+      houses: [],
+      leads: []
     };
   }
 }
@@ -92,20 +108,41 @@ async function getDbConfig() {
       return {
         whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
         adminPassword: "admin",
-        headlineValue: 300
+        headlineValue: 300,
+        minHousesForBonus: 8,
+        opValuePerCpa: 3.12,
+        opBonus: 25.00,
+        leadValuePerCpa: 6.00,
+        leadBonus: 100.00,
+        operators: "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
+        statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
       };
     }
     return {
       whatsappUrl: data.whatsapp_url,
       adminPassword: data.admin_password,
-      headlineValue: Number(data.headline_value)
+      headlineValue: Number(data.headline_value),
+      minHousesForBonus: Number(data.min_houses_for_bonus || 8),
+      opValuePerCpa: Number(data.op_value_per_cpa || 3.12),
+      opBonus: Number(data.op_bonus || 25.00),
+      leadValuePerCpa: Number(data.lead_value_per_cpa || 6.00),
+      leadBonus: Number(data.lead_bonus || 100.00),
+      operators: data.operators || "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
+      statuses: data.statuses || "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
     };
   } else {
     const localData = readLocalDataFile();
     return {
       whatsappUrl: localData.whatsappUrl,
       adminPassword: localData.adminPassword,
-      headlineValue: localData.headlineValue || 300
+      headlineValue: localData.headlineValue || 300,
+      minHousesForBonus: localData.minHousesForBonus || 8,
+      opValuePerCpa: localData.opValuePerCpa || 3.12,
+      opBonus: localData.opBonus || 25.00,
+      leadValuePerCpa: localData.leadValuePerCpa || 6.00,
+      leadBonus: localData.leadBonus || 100.00,
+      operators: Array.isArray(localData.operators) ? localData.operators.join(", ") : (localData.operators || "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca"),
+      statuses: Array.isArray(localData.statuses) ? localData.statuses.join(", ") : (localData.statuses || "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu")
     };
   }
 }
@@ -135,12 +172,19 @@ async function getDbHouses() {
   }
 }
 
-async function saveDbConfig(whatsappUrl, adminPassword, headlineValue) {
+async function saveDbConfig(payload) {
   if (isSupabaseConfigured) {
     const updates = {};
-    if (whatsappUrl !== undefined) updates.whatsapp_url = whatsappUrl;
-    if (adminPassword !== undefined) updates.admin_password = adminPassword;
-    if (headlineValue !== undefined) updates.headline_value = Number(headlineValue);
+    if (payload.whatsappUrl !== undefined) updates.whatsapp_url = payload.whatsappUrl;
+    if (payload.adminPassword !== undefined) updates.admin_password = payload.adminPassword;
+    if (payload.headlineValue !== undefined) updates.headline_value = Number(payload.headlineValue);
+    if (payload.minHousesForBonus !== undefined) updates.min_houses_for_bonus = Number(payload.minHousesForBonus);
+    if (payload.opValuePerCpa !== undefined) updates.op_value_per_cpa = Number(payload.opValuePerCpa);
+    if (payload.opBonus !== undefined) updates.op_bonus = Number(payload.opBonus);
+    if (payload.leadValuePerCpa !== undefined) updates.lead_value_per_cpa = Number(payload.leadValuePerCpa);
+    if (payload.leadBonus !== undefined) updates.lead_bonus = Number(payload.leadBonus);
+    if (payload.operators !== undefined) updates.operators = payload.operators;
+    if (payload.statuses !== undefined) updates.statuses = payload.statuses;
 
     const { error } = await supabase
       .from('configs')
@@ -154,90 +198,208 @@ async function saveDbConfig(whatsappUrl, adminPassword, headlineValue) {
     return true;
   } else {
     const localData = readLocalDataFile();
-    if (whatsappUrl !== undefined) localData.whatsappUrl = whatsappUrl;
-    if (adminPassword !== undefined) localData.adminPassword = adminPassword;
-    if (headlineValue !== undefined) localData.headlineValue = Number(headlineValue);
+    if (payload.whatsappUrl !== undefined) localData.whatsappUrl = payload.whatsappUrl;
+    if (payload.adminPassword !== undefined) localData.adminPassword = payload.adminPassword;
+    if (payload.headlineValue !== undefined) localData.headlineValue = Number(payload.headlineValue);
+    if (payload.minHousesForBonus !== undefined) localData.minHousesForBonus = Number(payload.minHousesForBonus);
+    if (payload.opValuePerCpa !== undefined) localData.opValuePerCpa = Number(payload.opValuePerCpa);
+    if (payload.opBonus !== undefined) localData.opBonus = Number(payload.opBonus);
+    if (payload.leadValuePerCpa !== undefined) localData.leadValuePerCpa = Number(payload.leadValuePerCpa);
+    if (payload.leadBonus !== undefined) localData.leadBonus = Number(payload.leadBonus);
+    
+    if (payload.operators !== undefined) {
+      localData.operators = payload.operators.split(",").map(s => s.strip());
+    }
+    if (payload.statuses !== undefined) {
+      localData.statuses = payload.statuses.split(",").map(s => s.strip());
+    }
+    
     return writeLocalDataFile(localData);
   }
 }
 
-async function addDbHouse(house) {
+// -------------------------------------------------------------
+// LEADS DATABASE LAYER
+// -------------------------------------------------------------
+async function getDbLeads(filters = {}) {
+  const { search, operator, status, isClosed } = filters;
+  
+  if (isSupabaseConfigured) {
+    let query = supabase.from('leads').select('*');
+    
+    if (operator) query = query.eq('operator', operator);
+    if (status) query = query.eq('status', status);
+    if (isClosed !== undefined && isClosed !== '') {
+      query = query.eq('is_closed', isClosed === 'true');
+    }
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,whatsapp.ilike.%${search}%`);
+    }
+    
+    // Sort by date desc, then by id desc
+    query = query.order('date', { ascending: false }).order('id', { ascending: false });
+    
+    const { data, error } = await query;
+    if (error) {
+      console.error("Supabase leads fetch error:", error);
+      return [];
+    }
+    
+    return data.map(l => ({
+      id: l.id,
+      date: l.date,
+      name: l.name,
+      whatsapp: l.whatsapp,
+      operator: l.operator,
+      status: l.status,
+      completedHouses: l.completed_houses || [],
+      losses: Number(l.losses || 0),
+      isClosed: l.is_closed,
+      indication: l.indication || ""
+    }));
+  } else {
+    const localData = readLocalDataFile();
+    let filtered = localData.leads || [];
+    
+    if (operator) {
+      filtered = filtered.filter(l => l.operator === operator);
+    }
+    if (status) {
+      filtered = filtered.filter(l => l.status === status);
+    }
+    if (isClosed !== undefined && isClosed !== '') {
+      const boolClosed = isClosed === 'true';
+      filtered = filtered.filter(l => l.isClosed === boolClosed || l.is_closed === boolClosed);
+    }
+    if (search) {
+      const term = search.toLowerCase();
+      filtered = filtered.filter(l => 
+        (l.name && l.name.toLowerCase().includes(term)) || 
+        (l.whatsapp && l.whatsapp.includes(term))
+      );
+    }
+    
+    // Sort by date desc
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    return filtered.map(l => ({
+      id: l.id,
+      date: l.date,
+      name: l.name,
+      whatsapp: l.whatsapp,
+      operator: l.operator,
+      status: l.status,
+      completedHouses: l.completedHouses || l.completed_houses || [],
+      losses: Number(l.losses || 0),
+      isClosed: l.isClosed !== undefined ? l.isClosed : l.is_closed,
+      indication: l.indication || ""
+    }));
+  }
+}
+
+async function addDbLead(lead) {
   if (isSupabaseConfigured) {
     const { error } = await supabase
-      .from('houses')
+      .from('leads')
       .insert({
-        id: house.id,
-        name: house.name,
-        emoji: house.emoji,
-        color: house.color,
-        value: house.value,
-        active: house.active
+        date: lead.date,
+        name: lead.name,
+        whatsapp: lead.whatsapp,
+        operator: lead.operator,
+        status: lead.status,
+        completed_houses: lead.completedHouses,
+        losses: Number(lead.losses || 0),
+        is_closed: lead.isClosed || false,
+        indication: lead.indication || ""
       });
     
     if (error) {
-      console.error("Supabase insert house error:", error);
+      console.error("Supabase lead insert error:", error);
       return false;
     }
     return true;
   } else {
     const localData = readLocalDataFile();
-    localData.houses.push(house);
+    if (!localData.leads) localData.leads = [];
+    
+    const newLead = {
+      id: Date.now(),
+      date: lead.date,
+      name: lead.name,
+      whatsapp: lead.whatsapp,
+      operator: lead.operator,
+      status: lead.status,
+      completedHouses: lead.completedHouses || [],
+      losses: Number(lead.losses || 0),
+      isClosed: lead.isClosed || false,
+      indication: lead.indication || ""
+    };
+    
+    localData.leads.push(newLead);
     return writeLocalDataFile(localData);
   }
 }
 
-async function updateDbHouse(id, updates) {
+async function updateDbLead(id, updates) {
   if (isSupabaseConfigured) {
-    const mappedUpdates = {};
-    if (updates.name !== undefined) mappedUpdates.name = updates.name;
-    if (updates.emoji !== undefined) mappedUpdates.emoji = updates.emoji;
-    if (updates.color !== undefined) mappedUpdates.color = updates.color;
-    if (updates.value !== undefined) mappedUpdates.value = Number(updates.value);
-    if (updates.active !== undefined) mappedUpdates.active = updates.active;
+    const dbUpdates = {};
+    if (updates.date !== undefined) dbUpdates.date = updates.date;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.whatsapp !== undefined) dbUpdates.whatsapp = updates.whatsapp;
+    if (updates.operator !== undefined) dbUpdates.operator = updates.operator;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.completedHouses !== undefined) dbUpdates.completed_houses = updates.completedHouses;
+    if (updates.losses !== undefined) dbUpdates.losses = Number(updates.losses);
+    if (updates.isClosed !== undefined) dbUpdates.is_closed = updates.isClosed;
+    if (updates.indication !== undefined) dbUpdates.indication = updates.indication;
 
     const { error } = await supabase
-      .from('houses')
-      .update(mappedUpdates)
+      .from('leads')
+      .update(dbUpdates)
       .eq('id', id);
     
     if (error) {
-      console.error("Supabase update house error:", error);
+      console.error("Supabase lead update error:", error);
       return false;
     }
     return true;
   } else {
     const localData = readLocalDataFile();
-    const idx = localData.houses.findIndex(h => h.id === id);
+    const idx = localData.leads.findIndex(l => String(l.id) === String(id));
     if (idx === -1) return false;
     
-    if (updates.name !== undefined) localData.houses[idx].name = updates.name;
-    if (updates.emoji !== undefined) localData.houses[idx].emoji = updates.emoji;
-    if (updates.color !== undefined) localData.houses[idx].color = updates.color;
-    if (updates.value !== undefined) localData.houses[idx].value = Number(updates.value);
-    if (updates.active !== undefined) localData.houses[idx].active = updates.active;
+    if (updates.date !== undefined) localData.leads[idx].date = updates.date;
+    if (updates.name !== undefined) localData.leads[idx].name = updates.name;
+    if (updates.whatsapp !== undefined) localData.leads[idx].whatsapp = updates.whatsapp;
+    if (updates.operator !== undefined) localData.leads[idx].operator = updates.operator;
+    if (updates.status !== undefined) localData.leads[idx].status = updates.status;
+    if (updates.completedHouses !== undefined) localData.leads[idx].completedHouses = updates.completedHouses;
+    if (updates.losses !== undefined) localData.leads[idx].losses = Number(updates.losses);
+    if (updates.isClosed !== undefined) localData.leads[idx].isClosed = updates.isClosed;
+    if (updates.indication !== undefined) localData.leads[idx].indication = updates.indication;
     
     return writeLocalDataFile(localData);
   }
 }
 
-async function deleteDbHouse(id) {
+async function deleteDbLead(id) {
   if (isSupabaseConfigured) {
     const { error } = await supabase
-      .from('houses')
+      .from('leads')
       .delete()
       .eq('id', id);
     
     if (error) {
-      console.error("Supabase delete house error:", error);
+      console.error("Supabase lead delete error:", error);
       return false;
     }
     return true;
   } else {
     const localData = readLocalDataFile();
-    const filtered = localData.houses.filter(h => h.id !== id);
-    if (localData.houses.length === filtered.length) return false;
+    const filtered = (localData.leads || []).filter(l => String(l.id) !== String(id));
+    if (localData.leads.length === filtered.length) return false;
     
-    localData.houses = filtered;
+    localData.leads = filtered;
     return writeLocalDataFile(localData);
   }
 }
@@ -306,7 +468,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ADMIN: Get full dashboard data
+// ADMIN: Get full dashboard configurations
 app.get('/api/admin/data', authMiddleware, async (req, res) => {
   try {
     const config = await getDbConfig();
@@ -316,6 +478,16 @@ app.get('/api/admin/data', authMiddleware, async (req, res) => {
       whatsappUrl: config.whatsappUrl,
       adminPassword: config.adminPassword,
       headlineValue: config.headlineValue,
+      
+      // New configurations fields
+      minHousesForBonus: config.minHousesForBonus,
+      opValuePerCpa: config.opValuePerCpa,
+      opBonus: config.opBonus,
+      leadValuePerCpa: config.leadValuePerCpa,
+      leadBonus: config.leadBonus,
+      operators: config.operators,
+      statuses: config.statuses,
+      
       houses: houses
     });
   } catch (err) {
@@ -326,14 +498,23 @@ app.get('/api/admin/data', authMiddleware, async (req, res) => {
 
 // ADMIN: Save global configurations
 app.post('/api/admin/config', authMiddleware, async (req, res) => {
-  const { whatsappUrl, adminPassword, headlineValue } = req.body;
+  const { 
+    whatsappUrl, adminPassword, headlineValue,
+    minHousesForBonus, opValuePerCpa, opBonus,
+    leadValuePerCpa, leadBonus, operators, statuses
+  } = req.body;
   
   if (!whatsappUrl) {
     return res.status(400).json({ error: 'O link do WhatsApp é obrigatório.' });
   }
   
   try {
-    const success = await saveDbConfig(whatsappUrl, adminPassword, headlineValue);
+    const success = await saveDbConfig({
+      whatsappUrl, adminPassword, headlineValue,
+      minHousesForBonus, opValuePerCpa, opBonus,
+      leadValuePerCpa, leadBonus, operators, statuses
+    });
+    
     if (success) {
       const config = await getDbConfig();
       res.json({ success: true, message: 'Configurações salvas!', token: config.adminPassword });
@@ -346,13 +527,10 @@ app.post('/api/admin/config', authMiddleware, async (req, res) => {
   }
 });
 
-// ADMIN: Add a new house
+// ADMIN: Houses endpoints (already verified)
 app.post('/api/admin/houses', authMiddleware, async (req, res) => {
   const { name, emoji, color, value, active } = req.body;
-  
-  if (!name || !value) {
-    return res.status(400).json({ error: 'Nome e Valor da Banca são obrigatórios.' });
-  }
+  if (!name || !value) return res.status(400).json({ error: 'Nome e Valor são obrigatórios.' });
   
   const newHouse = {
     id: Date.now().toString(),
@@ -365,49 +543,126 @@ app.post('/api/admin/houses', authMiddleware, async (req, res) => {
   
   try {
     const success = await addDbHouse(newHouse);
-    if (success) {
-      res.status(201).json(newHouse);
-    } else {
-      res.status(500).json({ error: 'Erro ao criar a casa no banco de dados.' });
-    }
+    if (success) res.status(201).json(newHouse);
+    else res.status(500).json({ error: 'Erro ao criar a casa no banco.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro no servidor ao adicionar casa.' });
+    res.status(500).json({ error: 'Erro no servidor.' });
   }
 });
 
-// ADMIN: Update an existing house
 app.put('/api/admin/houses/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { name, emoji, color, value, active } = req.body;
-  
   try {
     const success = await updateDbHouse(id, { name, emoji, color, value, active });
-    if (success) {
-      res.json({ success: true, message: 'Casa de aposta atualizada.' });
-    } else {
-      res.status(500).json({ error: 'Erro ao atualizar a casa no banco de dados.' });
-    }
+    if (success) res.json({ success: true });
+    else res.status(500).json({ error: 'Erro ao atualizar.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro no servidor ao editar casa.' });
+    res.status(500).json({ error: 'Erro no servidor.' });
   }
 });
 
-// ADMIN: Delete a house
 app.delete('/api/admin/houses/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  
   try {
     const success = await deleteDbHouse(id);
+    if (success) res.json({ success: true });
+    else res.status(500).json({ error: 'Erro ao excluir.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro no servidor.' });
+  }
+});
+
+// -------------------------------------------------------------
+// LEADS API ENDPOINTS
+// -------------------------------------------------------------
+
+// ADMIN: GET all leads with filters
+app.get('/api/admin/leads', authMiddleware, async (req, res) => {
+  const { search, operator, status, isClosed } = req.query;
+  try {
+    const leads = await getDbLeads({ search, operator, status, isClosed });
+    res.json(leads);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao obter listagem de leads.' });
+  }
+});
+
+// ADMIN: POST create new lead
+app.post('/api/admin/leads', authMiddleware, async (req, res) => {
+  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, indication } = req.body;
+  
+  if (!date || !name) {
+    return res.status(400).json({ error: 'Data e Nome são obrigatórios.' });
+  }
+  
+  try {
+    const success = await addDbLead({
+      date,
+      name: name.trim(),
+      whatsapp: whatsapp ? whatsapp.trim() : "",
+      operator: operator || "Desconhecido",
+      status: status || "⏳ Em Andamento",
+      completedHouses: completedHouses || [],
+      losses: losses || 0,
+      isClosed: isClosed || false,
+      indication: indication || ""
+    });
+    
     if (success) {
-      res.json({ success: true, message: 'Casa de aposta removida.' });
+      res.status(201).json({ success: true, message: 'Lead criado com sucesso!' });
     } else {
-      res.status(500).json({ error: 'Erro ao excluir a casa no banco de dados.' });
+      res.status(500).json({ error: 'Erro ao salvar lead no banco de dados.' });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro no servidor ao remover casa.' });
+    res.status(500).json({ error: 'Erro interno ao salvar lead.' });
+  }
+});
+
+// ADMIN: PUT update lead
+app.put('/api/admin/leads/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, indication } = req.body;
+  
+  try {
+    const success = await updateDbLead(id, {
+      date,
+      name,
+      whatsapp,
+      operator,
+      status,
+      completedHouses,
+      losses,
+      isClosed,
+      indication
+    });
+    
+    if (success) {
+      res.json({ success: true, message: 'Lead atualizado!' });
+    } else {
+      res.status(500).json({ error: 'Erro ao atualizar lead no banco.' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro no servidor ao editar lead.' });
+  }
+});
+
+// ADMIN: DELETE lead
+app.delete('/api/admin/leads/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const success = await deleteDbLead(id);
+    if (success) {
+      res.json({ success: true, message: 'Lead excluído.' });
+    } else {
+      res.status(500).json({ error: 'Erro ao remover lead no banco.' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro no servidor ao remover lead.' });
   }
 });
 

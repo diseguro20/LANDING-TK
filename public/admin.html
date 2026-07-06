@@ -8,7 +8,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,6 +53,17 @@
           <i class="fa-solid fa-gauge-high"></i>
           <h1>Painel Admin <span>Lucro Máximo</span></h1>
         </div>
+        
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+          <button class="tab-btn active" data-tab="tab-leads">
+            <i class="fa-solid fa-users"></i> Gestão de Leads
+          </button>
+          <button class="tab-btn" data-tab="tab-settings">
+            <i class="fa-solid fa-sliders"></i> Regras & Casas
+          </button>
+        </nav>
+
         <div class="admin-actions">
           <a href="/" target="_blank" class="btn-secondary"><i class="fa-solid fa-eye"></i> Ver Site</a>
           <button id="btn-logout" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
@@ -64,119 +75,280 @@
     <main class="admin-content">
       <div class="container">
         
-        <!-- Grid layout for configs and list -->
-        <div class="admin-grid">
+        <!-- ==========================================
+             TAB 1: GESTÃO DE LEADS
+             ========================================== -->
+        <div id="tab-leads" class="tab-content-panel">
           
-          <!-- Column 1: Configs and Add House -->
-          <div class="admin-col">
-            
-            <!-- Card 1: Link and Admin Config -->
-            <div class="card">
-              <div class="card-header">
-                <i class="fa-solid fa-gear"></i>
-                <h2>Configurações Gerais</h2>
-              </div>
-              <div class="card-body">
-                <form id="general-config-form">
-                  <div class="form-group">
-                    <label for="whatsapp-url-input">Link do Grupo do WhatsApp</label>
-                    <input type="url" id="whatsapp-url-input" placeholder="https://chat.whatsapp.com/..." required>
-                    <small class="form-helper">Os leads serão direcionados para este link ao clicarem no botão da Landing Page.</small>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="headline-value-input">Valor Promocional do Topo (R$)</label>
-                    <input type="number" id="headline-value-input" min="0" placeholder="Ex: 500" required>
-                    <small class="form-helper">Esse valor aparecerá no topo da Landing Page ("FATURE ATÉ R$ X HOJE").</small>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="admin-password-input">Nova Senha do Painel (opcional)</label>
-                    <input type="password" id="admin-password-input" placeholder="Deixe em branco para manter a atual">
-                    <small class="form-helper">Altere a senha de acesso a este painel administrativo.</small>
-                  </div>
-                  
-                  <button type="submit" class="btn-success"><i class="fa-solid fa-floppy-disk"></i> Salvar Configurações</button>
-                </form>
-              </div>
+          <!-- Leads Summary Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-title">Total de Leads</span>
+              <span class="metric-value" id="metric-total-leads">0</span>
+              <i class="fa-solid fa-users metric-icon blue"></i>
             </div>
-
-            <!-- Card 2: Add New House -->
-            <div class="card mt-20">
-              <div class="card-header">
-                <i class="fa-solid fa-circle-plus"></i>
-                <h2>Adicionar Casa de Apostas</h2>
-              </div>
-              <div class="card-body">
-                <form id="add-house-form">
-                  <div class="form-group">
-                    <label for="house-name-input">Nome da Casa</label>
-                    <input type="text" id="house-name-input" placeholder="Ex: BETANO" required>
-                  </div>
-                  
-                  <div class="form-row">
-                    <div class="form-group col-6">
-                      <label for="house-emoji-input">Emoji / Ícone</label>
-                      <input type="text" id="house-emoji-input" placeholder="Ex: 🔘 ou 💥" required>
-                    </div>
-                    <div class="form-group col-6">
-                      <label for="house-color-input">Cor de Destaque</label>
-                      <div class="color-picker-wrapper">
-                        <input type="color" id="house-color-input" value="#00ff66">
-                        <input type="text" id="house-color-hex" value="#00ff66" placeholder="#00ff66">
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="house-value-input">Valor Estimado da Banca (R$)</label>
-                    <input type="number" id="house-value-input" min="1" step="any" placeholder="Ex: 50" required>
-                  </div>
-
-                  <div class="form-group checkbox-group">
-                    <input type="checkbox" id="house-active-input" checked>
-                    <label for="house-active-input">Ativar Casa de Aposta (exibir na LP)</label>
-                  </div>
-                  
-                  <button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i> Cadastrar Casa</button>
-                </form>
-              </div>
+            <div class="metric-card">
+              <span class="metric-title">Total de CPAs</span>
+              <span class="metric-value" id="metric-total-cpas">0</span>
+              <i class="fa-solid fa-check-double metric-icon green"></i>
             </div>
-
+            <div class="metric-card">
+              <span class="metric-title">Comissão OP</span>
+              <span class="metric-value" id="metric-total-op">R$ 0,00</span>
+              <i class="fa-solid fa-headset metric-icon purple"></i>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Pagamentos Leads</span>
+              <span class="metric-value" id="metric-total-lead-pay">R$ 0,00</span>
+              <i class="fa-solid fa-sack-dollar metric-icon gold"></i>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Perdas Totais</span>
+              <span class="metric-value" id="metric-total-losses">R$ 0,00</span>
+              <i class="fa-solid fa-chart-line-down metric-icon red"></i>
+            </div>
           </div>
 
-          <!-- Column 2: Houses List -->
-          <div class="admin-col">
-            <div class="card">
-              <div class="card-header list-header">
-                <div>
-                  <i class="fa-solid fa-list-check"></i>
-                  <h2>Casas Cadastradas</h2>
-                </div>
-                <span class="badge" id="houses-total-badge">0</span>
+          <!-- Filters & Actions Area -->
+          <div class="card mt-20">
+            <div class="card-header list-header">
+              <div class="filter-group-row">
+                <i class="fa-solid fa-filter"></i>
+                <h2>Filtrar Leads</h2>
               </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="houses-table">
-                    <thead>
-                      <tr>
-                        <th>Emoji</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th class="text-right">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody id="admin-houses-tbody">
-                      <!-- Loaded dynamically -->
-                      <tr>
-                        <td colspan="5" class="text-center py-20">Carregando casas de apostas...</td>
-                      </tr>
-                    </tbody>
-                  </table>
+              <button id="btn-new-lead" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Novo Lead</button>
+            </div>
+            <div class="card-body">
+              <div class="filters-grid">
+                <div class="filter-item">
+                  <label for="filter-search">Buscar Nome / WhatsApp</label>
+                  <input type="text" id="filter-search" placeholder="Ex: Ana Julia ou (11)...">
+                </div>
+                <div class="filter-item">
+                  <label for="filter-operator">Operador(a)</label>
+                  <select id="filter-operator">
+                    <option value="">Todos</option>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <label for="filter-status">Status</label>
+                  <select id="filter-status">
+                    <option value="">Todos</option>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <label for="filter-closed">Encerramento</label>
+                  <select id="filter-closed">
+                    <option value="">Todos</option>
+                    <option value="false">Em Aberto</option>
+                    <option value="true">Encerrado</option>
+                  </select>
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Leads Data Table -->
+          <div class="card mt-20">
+            <div class="card-header list-header">
+              <div>
+                <i class="fa-solid fa-users-viewfinder"></i>
+                <h2>Leads Recentes</h2>
+              </div>
+              <span class="badge" id="leads-count-badge">0</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="leads-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Nome / WhatsApp</th>
+                      <th>Operador(a)</th>
+                      <th>Status</th>
+                      <th>CPAs</th>
+                      <th>Pagamento Lead</th>
+                      <th>Comissão OP</th>
+                      <th>Perdas</th>
+                      <th>Encerrado</th>
+                      <th class="text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-leads-tbody">
+                    <tr>
+                      <td colspan="10" class="text-center py-20">Carregando listagem de leads...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==========================================
+             TAB 2: CONFIGURAÇÕES DE REGRAS & CASAS
+             ========================================== -->
+        <div id="tab-settings" class="tab-content-panel hide">
+          
+          <div class="admin-grid">
+            
+            <!-- Configs and Commission Rules Form -->
+            <div class="admin-col">
+              
+              <!-- Configurations Form -->
+              <div class="card">
+                <div class="card-header">
+                  <i class="fa-solid fa-sliders"></i>
+                  <h2>Parâmetros do Sistema & Comissões</h2>
+                </div>
+                <div class="card-body">
+                  <form id="general-config-form">
+                    
+                    <h3 class="settings-subsection-title">Configurações Gerais</h3>
+                    <div class="form-group">
+                      <label for="whatsapp-url-input">Link do Grupo do WhatsApp</label>
+                      <input type="url" id="whatsapp-url-input" placeholder="https://chat.whatsapp.com/..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="headline-value-input">Valor Promocional do Topo (R$)</label>
+                      <input type="number" id="headline-value-input" min="0" placeholder="Ex: 500" required>
+                    </div>
+
+                    <h3 class="settings-subsection-title">Regras de Comissão do Operador</h3>
+                    <div class="form-row">
+                      <div class="form-group col-6">
+                        <label for="op-value-input">Valor por CPA (R$)</label>
+                        <input type="number" id="op-value-input" step="0.01" min="0" required>
+                      </div>
+                      <div class="form-group col-6">
+                        <label for="op-bonus-input">Bônus por Combo (R$)</label>
+                        <input type="number" id="op-bonus-input" step="0.01" min="0" required>
+                      </div>
+                    </div>
+
+                    <h3 class="settings-subsection-title">Regras de Pagamento do Lead</h3>
+                    <div class="form-row">
+                      <div class="form-group col-6">
+                        <label for="lead-value-input">Valor por CPA (R$)</label>
+                        <input type="number" id="lead-value-input" step="0.01" min="0" required>
+                      </div>
+                      <div class="form-group col-6">
+                        <label for="lead-bonus-input">Bônus por Combo (R$)</label>
+                        <input type="number" id="lead-bonus-input" step="0.01" min="0" required>
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="min-houses-input">Quantidade de Casas para Combo / Bônus</label>
+                      <input type="number" id="min-houses-input" min="1" required>
+                    </div>
+
+                    <h3 class="settings-subsection-title">Listas Dinâmicas (Separadas por vírgula)</h3>
+                    <div class="form-group">
+                      <label for="operators-input">Lista de Operadores</label>
+                      <textarea id="operators-input" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="statuses-input">Lista de Statuses de Leads</label>
+                      <textarea id="statuses-input" rows="3" required></textarea>
+                    </div>
+
+                    <h3 class="settings-subsection-title">Segurança</h3>
+                    <div class="form-group">
+                      <label for="admin-password-input">Nova Senha do Painel (opcional)</label>
+                      <input type="password" id="admin-password-input" placeholder="Deixe em branco para manter a atual">
+                    </div>
+                    
+                    <button type="submit" class="btn-success btn-block mt-20"><i class="fa-solid fa-floppy-disk"></i> Salvar Configurações</button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Houses Management Form and List -->
+            <div class="admin-col">
+              
+              <!-- Add betting house -->
+              <div class="card">
+                <div class="card-header">
+                  <i class="fa-solid fa-circle-plus"></i>
+                  <h2>Adicionar Casa de Apostas</h2>
+                </div>
+                <div class="card-body">
+                  <form id="add-house-form">
+                    <div class="form-group">
+                      <label for="house-name-input">Nome da Casa</label>
+                      <input type="text" id="house-name-input" placeholder="Ex: BETANO" required>
+                    </div>
+                    
+                    <div class="form-row">
+                      <div class="form-group col-6">
+                        <label for="house-emoji-input">Emoji / Ícone</label>
+                        <input type="text" id="house-emoji-input" placeholder="Ex: 🔘" required>
+                      </div>
+                      <div class="form-group col-6">
+                        <label for="house-color-input">Cor de Destaque</label>
+                        <div class="color-picker-wrapper">
+                          <input type="color" id="house-color-input" value="#00ff66">
+                          <input type="text" id="house-color-hex" value="#00ff66" placeholder="#00ff66">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="house-value-input">Valor Estimado da Banca (R$)</label>
+                      <input type="number" id="house-value-input" min="1" step="any" placeholder="Ex: 50" required>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                      <input type="checkbox" id="house-active-input" checked>
+                      <label for="house-active-input">Ativar Casa de Aposta (exibir na LP)</label>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i> Cadastrar Casa</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Houses table list -->
+              <div class="card mt-20">
+                <div class="card-header list-header">
+                  <div>
+                    <i class="fa-solid fa-hotel"></i>
+                    <h2>Casas Cadastradas</h2>
+                  </div>
+                  <span class="badge" id="houses-total-badge">0</span>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="houses-table">
+                      <thead>
+                        <tr>
+                          <th>Emoji</th>
+                          <th>Nome</th>
+                          <th>Valor</th>
+                          <th>Status</th>
+                          <th class="text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-houses-tbody">
+                        <tr>
+                          <td colspan="5" class="text-center py-20">Carregando casas de apostas...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
         </div>
@@ -185,7 +357,9 @@
     </main>
   </div>
 
-  <!-- Edit House Modal -->
+  <!-- ==========================================
+       MODAL 1: EDITAR CASA DE APOSTA
+       ========================================== -->
   <div id="edit-modal" class="modal-overlay hide">
     <div class="modal-card">
       <div class="modal-header">
@@ -228,6 +402,84 @@
           <div class="modal-actions">
             <button type="button" id="cancel-edit-btn" class="btn-secondary">Cancelar</button>
             <button type="submit" class="btn-success">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: CRIAR / EDITAR LEAD (DINÂMICO)
+       ========================================== -->
+  <div id="lead-modal" class="modal-overlay hide">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2 id="lead-modal-title">Novo Lead</h2>
+        <button id="close-lead-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="lead-form">
+          <input type="hidden" id="lead-id-input">
+          
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="lead-date-input">Data de Cadastro</label>
+              <input type="date" id="lead-date-input" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="lead-name-input">Nome Completo</label>
+              <input type="text" id="lead-name-input" placeholder="Ex: Ana Julia" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="lead-whatsapp-input">WhatsApp / Telefone</label>
+              <input type="text" id="lead-whatsapp-input" placeholder="Ex: 11 99625-6482">
+            </div>
+            <div class="form-group col-6">
+              <label for="lead-operator-input">Operador(a)</label>
+              <select id="lead-operator-input" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="lead-status-input">Status Atual</label>
+              <select id="lead-status-input" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="lead-losses-input">Perdas do Lead (R$)</label>
+              <input type="number" id="lead-losses-input" min="0" step="0.01" value="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="lead-indication-input">Indicação / Notas</label>
+              <input type="text" id="lead-indication-input" placeholder="Ex: Convidado de X">
+            </div>
+            <div class="form-group col-6 checkbox-group" style="padding-top: 30px;">
+              <input type="checkbox" id="lead-closed-input">
+              <label for="lead-closed-input">Ficha Encerrada? (Concluiu atendimento)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Casas Concluídas (Checkboxes)</label>
+            <div class="houses-checkbox-grid" id="lead-houses-check-grid">
+              <!-- Loaded dynamically based on the houses database -->
+              <p class="text-muted" style="font-size: 0.85rem;">Nenhuma casa de aposta cadastrada no sistema.</p>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancel-lead-modal-btn" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-success" id="lead-modal-submit-btn">Cadastrar Lead</button>
           </div>
         </form>
       </div>
