@@ -780,6 +780,65 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// PUBLIC: Register a new account
+app.post('/api/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
+  }
+
+  const normalizedUser = username.trim().toLowerCase();
+  if (normalizedUser === 'admin') {
+    return res.status(400).json({ error: 'O nome de usuário "admin" é reservado.' });
+  }
+  
+  if (normalizedUser.length < 3) {
+    return res.status(400).json({ error: 'O usuário deve ter pelo menos 3 caracteres.' });
+  }
+
+  try {
+    const existing = await getUserByUsername(normalizedUser);
+    if (existing) {
+      return res.status(400).json({ error: 'Este nome de usuário já está em uso.' });
+    }
+
+    const newUser = await createDbUser(normalizedUser, password.trim());
+    if (!newUser) {
+      return res.status(500).json({ error: 'Erro ao criar a conta.' });
+    }
+
+    await saveDbConfig(newUser.id, {
+      whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
+      headlineValue: 300,
+      minHousesForBonus: 8,
+      opValuePerCpa: 3.12,
+      opBonus: 25.00,
+      leadValuePerCpa: 6.00,
+      leadBonus: 100.00,
+      operators: "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
+      statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
+    });
+
+    const defaultHouses = [
+      { id: "1", name: "SUPERBET", emoji: "🔘", color: "#f15a24", value: 50, active: true },
+      { id: "2", name: "SPORTINGBET", emoji: "🔴", color: "#0055a5", value: 50, active: true },
+      { id: "3", name: "Betboom", emoji: "💥", color: "#ffdd00", value: 60, active: true },
+      { id: "4", name: "Donald Bet", emoji: "🦆", color: "#ff9900", value: 50, active: true },
+      { id: "5", name: "BETBET", emoji: "🟣", color: "#8a2be2", value: 70, active: true }
+    ];
+
+    for (const h of defaultHouses) {
+      await addDbHouse(newUser.id, h);
+    }
+
+    res.status(201).json({ success: true, token: `${newUser.id}:${newUser.username}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro no servidor ao criar conta.' });
+  }
+});
+
+
 // ADMIN: Get dashboard configurations for the logged-in user
 app.get('/api/admin/data', authMiddleware, async (req, res) => {
   try {

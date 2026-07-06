@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   let adminToken = localStorage.getItem('admin_token') || '';
   let loggedUsername = localStorage.getItem('logged_username') || '';
+  let loginMode = 'login'; // 'login' or 'register'
   let housesData = [];
   let leadsData = [];
   
@@ -159,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadDashboardData();
     } else {
       loginOverlay.classList.remove('hide');
+      dashboardWrapper.classLoading = false;
       dashboardWrapper.classList.add('hide');
     }
   }
@@ -171,6 +173,34 @@ document.addEventListener('DOMContentLoaded', () => {
     togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
   });
 
+  // Toggle Login/Register Mode
+  const toggleLoginModeBtn = document.getElementById('toggle-login-mode');
+  const loginTitle = document.getElementById('login-title');
+  const loginSubtitle = document.getElementById('login-subtitle');
+  const loginIcon = document.getElementById('login-icon');
+  const btnLoginSubmit = document.getElementById('btn-login-submit');
+
+  toggleLoginModeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginError.classList.add('hide');
+    
+    if (loginMode === 'login') {
+      loginMode = 'register';
+      loginTitle.textContent = 'Criar Nova Conta';
+      loginSubtitle.textContent = 'Cadastre-se para criar seu painel personalizado';
+      btnLoginSubmit.textContent = 'CRIAR CONTA E ENTRAR';
+      toggleLoginModeBtn.textContent = 'Já tem conta? Fazer login';
+      loginIcon.className = 'fa-solid fa-user-plus';
+    } else {
+      loginMode = 'login';
+      loginTitle.textContent = 'Painel Administrativo';
+      loginSubtitle.textContent = 'Faça login com a sua conta de acesso';
+      btnLoginSubmit.textContent = 'ENTRAR NO PAINEL';
+      toggleLoginModeBtn.textContent = 'Não tem conta? Criar uma conta';
+      loginIcon.className = 'fa-solid fa-lock-open';
+    }
+  });
+
   // Login Submit Handler
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -179,8 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
     
+    const url = loginMode === 'register' ? '/api/register' : '/api/login';
+    
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -188,9 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = await response.json();
       
-      if (response.ok && data.success) {
+      if (response.ok && (data.success || data.token)) {
         adminToken = data.token;
-        // The token is in format "userId:username"
         loggedUsername = data.token.split(':')[1];
         
         localStorage.setItem('admin_token', adminToken);
@@ -198,8 +229,19 @@ document.addEventListener('DOMContentLoaded', () => {
         
         usernameInput.value = '';
         passwordInput.value = '';
+        
+        const isReg = loginMode === 'register';
+        
+        // Reset to login mode
+        loginMode = 'login';
+        loginTitle.textContent = 'Painel Administrativo';
+        loginSubtitle.textContent = 'Faça login com a sua conta de acesso';
+        btnLoginSubmit.textContent = 'ENTRAR NO PAINEL';
+        toggleLoginModeBtn.textContent = 'Não tem conta? Criar uma conta';
+        loginIcon.className = 'fa-solid fa-lock-open';
+
         checkAuth();
-        showToast('Login efetuado com sucesso!');
+        showToast(isReg ? 'Conta criada com sucesso!' : 'Login efetuado com sucesso!');
       } else {
         loginError.textContent = data.error || 'Usuário ou senha incorretos.';
         loginError.classList.remove('hide');
@@ -210,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loginError.classList.remove('hide');
     }
   });
+
 
   // Logout Handler
   btnLogout.addEventListener('click', () => {

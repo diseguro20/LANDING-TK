@@ -22,9 +22,9 @@
   <div id="login-overlay" class="login-overlay">
     <div class="login-card">
       <div class="login-header">
-        <i class="fa-solid fa-lock-open"></i>
-        <h2>Painel Administrativo</h2>
-        <p>Faça login com a sua conta de acesso</p>
+        <i class="fa-solid fa-lock-open" id="login-icon"></i>
+        <h2 id="login-title">Painel Administrativo</h2>
+        <p id="login-subtitle">Faça login com a sua conta de acesso</p>
       </div>
       
       <form id="login-form">
@@ -44,10 +44,15 @@
         </div>
         
         <div id="login-error" class="error-alert hide">Usuário ou senha incorretos.</div>
-        <button type="submit" class="btn-primary btn-block">ENTRAR NO PAINEL</button>
+        <button type="submit" class="btn-primary btn-block" id="btn-login-submit">ENTRAR NO PAINEL</button>
       </form>
+      
+      <div style="margin-top: 20px; text-align: center;">
+        <a href="#" id="toggle-login-mode" style="color: var(--primary); font-size: 0.85rem; font-weight: 600; text-decoration: underline;">Não tem conta? Criar uma conta</a>
+      </div>
     </div>
   </div>
+
 
   <!-- Dashboard Main Layout -->
   <div id="dashboard-wrapper" class="dashboard-wrapper hide">
