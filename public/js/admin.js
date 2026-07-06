@@ -2,18 +2,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Authentication Elements
   const loginOverlay = document.getElementById('login-overlay');
   const loginForm = document.getElementById('login-form');
+  const usernameInput = document.getElementById('username-input');
   const passwordInput = document.getElementById('password-input');
   const togglePasswordBtn = document.getElementById('toggle-password-view');
   const loginError = document.getElementById('login-error');
   
   // Dashboard Core Elements
   const dashboardWrapper = document.getElementById('dashboard-wrapper');
+  const loggedUserTitle = document.getElementById('logged-user-title');
+  const btnViewSiteLink = document.getElementById('btn-view-site-link');
   const btnLogout = document.getElementById('btn-logout');
   const toast = document.getElementById('toast');
 
   // Tab Navigation Elements
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabPanels = document.querySelectorAll('.tab-content-panel');
+  const tabBtnUsers = document.getElementById('tab-btn-users');
 
   // ==========================================
   // TAB 1: GESTÃO DE LEADS ELEMENTS
@@ -31,6 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnNewLead = document.getElementById('btn-new-lead');
   const leadsCountBadge = document.getElementById('leads-count-badge');
   const adminLeadsTbody = document.getElementById('admin-leads-tbody');
+
+  // Pagination Elements
+  const btnPrevPage = document.getElementById('btn-prev-page');
+  const btnNextPage = document.getElementById('btn-next-page');
+  const pageIndicator = document.getElementById('page-indicator');
 
   // Lead Modal Elements
   const leadModal = document.getElementById('lead-modal');
@@ -91,13 +100,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeModalBtn = document.getElementById('close-modal-btn');
 
   // ==========================================
+  // TAB 3: CONTAS DE ACESSO ELEMENTS
+  // ==========================================
+  const addUserForm = document.getElementById('add-user-form');
+  const newUsernameInput = document.getElementById('new-username-input');
+  const newPasswordInput = document.getElementById('new-password-input');
+  const adminUsersTbody = document.getElementById('admin-users-tbody');
+  const usersTotalBadge = document.getElementById('users-total-badge');
+
+  // ==========================================
   // GLOBAL STATE
   // ==========================================
   let adminToken = localStorage.getItem('admin_token') || '';
+  let loggedUsername = localStorage.getItem('logged_username') || '';
   let housesData = [];
   let leadsData = [];
   
-  // Commission settings variables loaded from configs table
+  // Pagination State
+  let currentLeadsPage = 1;
+  let totalLeadsPages = 1;
+  const leadsLimit = 50;
+  
+  // Commission settings variables loaded from configs
   let rules = {
     minHousesForBonus: 8,
     opValuePerCpa: 3.12,
@@ -116,9 +140,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // AUTHENTICATION & LOGIN LOGIC
   // ==========================================
   function checkAuth() {
-    if (adminToken) {
+    if (adminToken && loggedUsername) {
       loginOverlay.classList.add('hide');
       dashboardWrapper.classList.remove('hide');
+      
+      // Update Brand Title
+      loggedUserTitle.textContent = `Painel: ${loggedUsername}`;
+      
+      // Customize "Ver Site" link
+      if (loggedUsername === 'admin') {
+        btnViewSiteLink.href = '/';
+        tabBtnUsers.classList.remove('hide'); // show accounts tab for superadmin
+      } else {
+        btnViewSiteLink.href = `/?ref=${loggedUsername}`;
+        tabBtnUsers.classList.add('hide'); // hide accounts tab for others
+      }
+
       loadDashboardData();
     } else {
       loginOverlay.classList.remove('hide');
@@ -126,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Toggle Password Visiblity
+  // Toggle Password Visibility
   togglePasswordBtn.addEventListener('click', () => {
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
     passwordInput.setAttribute('type', type);
@@ -139,25 +176,32 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     loginError.classList.add('hide');
     
+    const username = usernameInput.value;
     const password = passwordInput.value;
     
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ username, password })
       });
       
       const data = await response.json();
       
       if (response.ok && data.success) {
         adminToken = data.token;
+        // The token is in format "userId:username"
+        loggedUsername = data.token.split(':')[1];
+        
         localStorage.setItem('admin_token', adminToken);
+        localStorage.setItem('logged_username', loggedUsername);
+        
+        usernameInput.value = '';
         passwordInput.value = '';
         checkAuth();
         showToast('Login efetuado com sucesso!');
       } else {
-        loginError.textContent = data.error || 'Senha incorreta.';
+        loginError.textContent = data.error || 'Usuário ou senha incorretos.';
         loginError.classList.remove('hide');
       }
     } catch (err) {
@@ -170,7 +214,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout Handler
   btnLogout.addEventListener('click', () => {
     adminToken = '';
+    loggedUsername = '';
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('logged_username');
+    
+    // Reset tab state
+    tabButtons.forEach(b => b.classList.remove('active'));
+    tabPanels.forEach(p => p.classList.add('hide'));
+    tabButtons[0].classList.add('active');
+    tabPanels[0].classList.remove('hide');
+
     checkAuth();
     showToast('Sessão encerrada.');
   });
@@ -202,7 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (response.status === 401 || response.status === 403) {
         adminToken = '';
+        loggedUsername = '';
         localStorage.removeItem('admin_token');
+        localStorage.removeItem('logged_username');
         checkAuth();
         return;
       }
@@ -215,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
       whatsappUrlInput.value = data.whatsappUrl;
       headlineValueInput.value = data.headlineValue || 300;
       
-      // Load new commission parameter values
+      // Load commission parameters
       rules.minHousesForBonus = Number(data.minHousesForBonus || 8);
       rules.opValuePerCpa = Number(data.opValuePerCpa || 3.12);
       rules.opBonus = Number(data.opBonus || 25.00);
@@ -231,30 +286,34 @@ document.addEventListener('DOMContentLoaded', () => {
       operatorsInput.value = data.operators || "";
       statusesInput.value = data.statuses || "";
 
-      // Parse Dynamic Lists
-      operatorsList = data.operators ? data.operators.split(',').map(s => s.strip()) : [];
-      statusesList = data.statuses ? data.statuses.split(',').map(s => s.strip()) : [];
+      // Parse dynamic dropdown lists
+      operatorsList = data.operators ? data.operators.split(',').map(s => s.trim()) : [];
+      statusesList = data.statuses ? data.statuses.split(',').map(s => s.trim()) : [];
 
-      // Update dropdown inputs in UI
       populateDropdowns();
 
-      // Render Betting Houses List
+      // Render houses list
       housesData = data.houses || [];
       housesTotalBadge.textContent = housesData.length;
       renderHousesTable();
       renderHousesCheckboxGrid();
 
-      // Render Leads list
+      // Load leads (pages reset to 1)
+      currentLeadsPage = 1;
       await fetchLeads();
+
+      // Load sub-accounts list if logged user is superadmin
+      if (loggedUsername === 'admin') {
+        await loadUserAccounts();
+      }
     } catch (err) {
       console.error(err);
       showToast('Erro ao carregar configurações do dashboard.', true);
     }
   }
 
-  // Populate dynamic selects
+  // Populate filter and modal select inputs
   function populateDropdowns() {
-    // 1. Filter dropdown options
     filterOperator.innerHTML = '<option value="">Todos</option>';
     operatorsList.forEach(op => {
       filterOperator.innerHTML += `<option value="${op}">${op}</option>`;
@@ -265,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
       filterStatus.innerHTML += `<option value="${st}">${st}</option>`;
     });
 
-    // 2. Form dialog dropdown options
     leadOperatorInput.innerHTML = '<option value="">Selecione...</option>';
     operatorsList.forEach(op => {
       leadOperatorInput.innerHTML += `<option value="${op}">${op}</option>`;
@@ -277,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Fetch leads listing
+  // Fetch leads with pagination & filters
   async function fetchLeads() {
     const search = filterSearch.value;
     const operator = filterOperator.value;
@@ -289,6 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (operator) queryParams.append('operator', operator);
     if (status) queryParams.append('status', status);
     if (isClosed) queryParams.append('isClosed', isClosed);
+    
+    // Add pagination params
+    queryParams.append('page', currentLeadsPage);
+    queryParams.append('limit', leadsLimit);
 
     try {
       const response = await fetch(`/api/admin/leads?${queryParams.toString()}`, {
@@ -297,47 +359,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) throw new Error('Erro ao listar leads.');
 
-      leadsData = await response.json();
-      leadsCountBadge.textContent = leadsData.length;
+      const data = await response.json();
+      leadsData = data.leads || [];
       
-      calculateMetrics();
+      const pag = data.pagination;
+      leadsCountBadge.textContent = pag.totalCount;
+      totalLeadsPages = pag.totalPages || 1;
+      
+      // Update statistics and table rows
+      renderMetrics(data.metrics);
       renderLeadsTable();
+      updatePaginationControls(pag.totalCount);
     } catch (err) {
       console.error(err);
       showToast('Erro ao listar leads.', true);
     }
   }
 
-  // Calculate stats metrics from filters
-  function calculateMetrics() {
-    let totalLeads = leadsData.length;
-    let totalCpas = 0;
+  // Render totals cards using backend metrics object
+  function renderMetrics(metrics) {
+    if (!metrics) return;
+    
+    let totalLeads = metrics.totalLeads || 0;
+    let totalCpas = metrics.totalCpas || 0;
+    let totalLosses = metrics.totalLosses || 0.0;
+    
     let totalOpCommission = 0.0;
     let totalLeadPay = 0.0;
-    let totalLosses = 0.0;
 
-    leadsData.forEach(lead => {
-      const cpas = lead.completedHouses ? lead.completedHouses.length : 0;
-      totalCpas += cpas;
-      totalLosses += lead.losses || 0.0;
-
-      // Operator pay calculation
-      let opPay = 0.0;
+    (metrics.cpaCounts || []).forEach(cpas => {
+      // OP commission
       if (cpas >= rules.minHousesForBonus) {
-        opPay = rules.opBonus;
+        totalOpCommission += rules.opBonus;
       } else {
-        opPay = cpas * rules.opValuePerCpa;
+        totalOpCommission += cpas * rules.opValuePerCpa;
       }
-      totalOpCommission += opPay;
 
-      // Lead pay calculation
-      let leadPay = 0.0;
+      // Lead payment
       if (cpas >= rules.minHousesForBonus) {
-        leadPay = rules.leadBonus + (cpas - rules.minHousesForBonus) * rules.leadValuePerCpa;
+        totalLeadPay += rules.leadBonus + (cpas - rules.minHousesForBonus) * rules.leadValuePerCpa;
       } else {
-        leadPay = cpas * rules.leadValuePerCpa;
+        totalLeadPay += cpas * rules.leadValuePerCpa;
       }
-      totalLeadPay += leadPay;
     });
 
     metricTotalLeads.textContent = totalLeads;
@@ -347,17 +410,42 @@ document.addEventListener('DOMContentLoaded', () => {
     metricTotalLosses.textContent = `R$ ${totalLosses.toFixed(2)}`;
   }
 
-  // Filter Listeners (debounce to prevent hammer)
+  // Pagination UI handler
+  function updatePaginationControls(totalCount) {
+    pageIndicator.textContent = `Página ${currentLeadsPage} de ${totalLeadsPages} (Total: ${totalCount})`;
+    
+    btnPrevPage.disabled = currentLeadsPage <= 1;
+    btnNextPage.disabled = currentLeadsPage >= totalLeadsPages;
+  }
+
+  btnPrevPage.addEventListener('click', () => {
+    if (currentLeadsPage > 1) {
+      currentLeadsPage--;
+      fetchLeads();
+    }
+  });
+
+  btnNextPage.addEventListener('click', () => {
+    if (currentLeadsPage < totalLeadsPages) {
+      currentLeadsPage++;
+      fetchLeads();
+    }
+  });
+
+  // Filter Listeners (debounce search and reset page)
   let filterTimeout;
   const triggerFilter = () => {
     clearTimeout(filterTimeout);
-    filterTimeout = setTimeout(fetchLeads, 300);
+    filterTimeout = setTimeout(() => {
+      currentLeadsPage = 1;
+      fetchLeads();
+    }, 300);
   };
 
   filterSearch.addEventListener('input', triggerFilter);
-  filterOperator.addEventListener('change', fetchLeads);
-  filterStatus.addEventListener('change', fetchLeads);
-  filterClosed.addEventListener('change', fetchLeads);
+  filterOperator.addEventListener('change', () => { currentLeadsPage = 1; fetchLeads(); });
+  filterStatus.addEventListener('change', () => { currentLeadsPage = 1; fetchLeads(); });
+  filterClosed.addEventListener('change', () => { currentLeadsPage = 1; fetchLeads(); });
 
   // ==========================================
   // RENDER HELPERS
@@ -401,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Render Houses Checkbox list inside Lead Dialog
+  // Render Houses checkboxes inside Leads modal
   function renderHousesCheckboxGrid() {
     if (housesData.length === 0) {
       leadHousesCheckGrid.innerHTML = '<p class="text-muted" style="font-size: 0.85rem;">Cadastre casas primeiro na aba "Regras & Casas".</p>';
@@ -420,12 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Render Leads list table
+  // Render Leads list table rows
   function renderLeadsTable() {
     if (leadsData.length === 0) {
       adminLeadsTbody.innerHTML = `
         <tr>
-          <td colspan="10" class="text-center py-20">Nenhum lead encontrado com os filtros atuais.</td>
+          <td colspan="10" class="text-center py-20">Nenhum lead encontrado nesta página.</td>
         </tr>
       `;
       return;
@@ -434,10 +522,9 @@ document.addEventListener('DOMContentLoaded', () => {
     adminLeadsTbody.innerHTML = '';
     leadsData.forEach(lead => {
       const tr = document.createElement('tr');
-      
       const cpaCount = lead.completedHouses ? lead.completedHouses.length : 0;
       
-      // Calculate inline values based on rules
+      // Calculate inline payouts
       let opPay = cpaCount >= rules.minHousesForBonus ? rules.opBonus : (cpaCount * rules.opValuePerCpa);
       let leadPay = cpaCount >= rules.minHousesForBonus ? (rules.leadBonus + (cpaCount - rules.minHousesForBonus) * rules.leadValuePerCpa) : (cpaCount * rules.leadValuePerCpa);
       
@@ -447,7 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const checkedAttr = lead.isClosed ? 'checked' : '';
 
-      // Format Date nicely
       let formattedDate = lead.date;
       try {
         const dObj = new Date(lead.date + 'T00:00:00');
@@ -495,13 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Helper to string strip equivalent for Javascript
-  String.prototype.strip = function() {
-    return this.trim();
-  };
-
   // ==========================================
-  // GENERAL CONFIG FORM HANDLER
+  // CONFIG FORM HANDLER
   // ==========================================
   generalConfigForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -573,7 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Add House submit
   addHouseForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -609,11 +689,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Delete betting house
   async function deleteHouse(id, name) {
-    if (!confirm(`Tem certeza que deseja excluir a casa "${name}"? Leads que concluíram esta casa não a perderão, mas ela sumirá das listas.`)) {
-      return;
-    }
+    if (!confirm(`Tem certeza que deseja excluir a casa "${name}"?`)) return;
     
     try {
       const response = await fetch(`/api/admin/houses/${id}`, {
@@ -634,7 +711,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Open Edit House modal
   function openEditHouseModal(house) {
     editHouseId.value = house.id;
     editHouseName.value = house.name;
@@ -655,7 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
   cancelEditBtn.addEventListener('click', closeEditModal);
   closeModalBtn.addEventListener('click', closeEditModal);
 
-  // Edit House submit
   editHouseForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -693,20 +768,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // LEADS FORM ACTIONS & LOGIC
   // ==========================================
-
-  // Open creation modal
   btnNewLead.addEventListener('click', () => {
     leadForm.reset();
     leadIdInput.value = '';
     
-    // Set default date to today in input
     const today = new Date().toISOString().split('T')[0];
     leadDateInput.value = today;
     
     leadLossesInput.value = 0;
     leadClosedInput.checked = false;
     
-    // Clear all completed house checkboxes
     document.querySelectorAll('input[name="lead-house"]').forEach(cb => {
       cb.checked = false;
     });
@@ -717,7 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
     leadModal.classList.remove('hide');
   });
 
-  // Close Lead Modal
   function closeLeadModal() {
     leadModal.classList.add('hide');
     leadForm.reset();
@@ -726,7 +796,6 @@ document.addEventListener('DOMContentLoaded', () => {
   cancelLeadModalBtn.addEventListener('click', closeLeadModal);
   closeLeadModalBtn.addEventListener('click', closeLeadModal);
 
-  // Open Edit Lead Modal
   function openEditLeadModal(lead) {
     leadIdInput.value = lead.id;
     leadDateInput.value = lead.date;
@@ -738,7 +807,6 @@ document.addEventListener('DOMContentLoaded', () => {
     leadIndicationInput.value = lead.indication || "";
     leadClosedInput.checked = lead.isClosed || false;
 
-    // Check houses checkboxes
     const completedSet = new Set(lead.completedHouses || []);
     document.querySelectorAll('input[name="lead-house"]').forEach(cb => {
       cb.checked = completedSet.has(cb.value);
@@ -750,7 +818,6 @@ document.addEventListener('DOMContentLoaded', () => {
     leadModal.classList.remove('hide');
   }
 
-  // Submit Lead creation / edition
   leadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -764,7 +831,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const indication = leadIndicationInput.value;
     const isClosed = leadClosedInput.checked;
     
-    // Extract checked houses
     const completedHouses = Array.from(document.querySelectorAll('input[name="lead-house"]:checked'))
       .map(cb => cb.value);
 
@@ -809,7 +875,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Fast inline closed toggle
   async function fastToggleLeadClosed(id, isClosed) {
     try {
       const response = await fetch(`/api/admin/leads/${id}`, {
@@ -823,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) {
         showToast(isClosed ? 'Atendimento encerrado.' : 'Atendimento reaberto.');
-        fetchLeads(); // refresh totals and row metrics
+        fetchLeads();
       } else {
         const data = await response.json();
         showToast(data.error || 'Erro ao alterar encerramento.', true);
@@ -834,11 +899,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Delete lead
   async function deleteLead(id, name) {
-    if (!confirm(`Tem certeza que deseja excluir o lead "${name}"? Esta ação é irreversível!`)) {
-      return;
-    }
+    if (!confirm(`Tem certeza que deseja excluir o lead "${name}"?`)) return;
 
     try {
       const response = await fetch(`/api/admin/leads/${id}`, {
@@ -860,6 +922,120 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
+  // TAB 3: ACCOUNT MANAGEMENT LOGIC (Superadmin)
+  // ==========================================
+
+  // Load created sub-accounts list
+  async function loadUserAccounts() {
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+
+      if (!response.ok) throw new Error('Falha ao listar usuários.');
+
+      const users = await response.json();
+      usersTotalBadge.textContent = users.length;
+      renderUsersTable(users);
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao carregar contas de acesso.', true);
+    }
+  }
+
+  // Render accounts list table
+  function renderUsersTable(users) {
+    if (users.length === 0) {
+      adminUsersTbody.innerHTML = `
+        <tr>
+          <td colspan="3" class="text-center py-20">Nenhuma outra conta de acesso cadastrada.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Determine current web hostname for customized links
+    const currentOrigin = window.location.origin;
+
+    adminUsersTbody.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      const customUrl = `${currentOrigin}/?ref=${u.username}`;
+
+      tr.innerHTML = `
+        <td><strong style="color: var(--primary);">${u.username}</strong></td>
+        <td><a href="${customUrl}" target="_blank" style="color: var(--success); text-decoration: underline;">${customUrl}</a></td>
+        <td class="text-right">
+          <button class="btn-danger btn-icon btn-delete-user" data-id="${u.id}" data-username="${u.username}">
+            <i class="fa-solid fa-trash"></i> Excluir
+          </button>
+        </td>
+      `;
+
+      tr.querySelector('.btn-delete-user').addEventListener('click', () => deleteUserAccount(u.id, u.username));
+      adminUsersTbody.appendChild(tr);
+    });
+  }
+
+  // Submit new user creation
+  addUserForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = newUsernameInput.value;
+    const password = newPasswordInput.value;
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(`Conta de acesso "${username}" criada!`);
+        addUserForm.reset();
+        await loadUserAccounts();
+      } else {
+        showToast(data.error || 'Erro ao criar conta.', true);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro de conexão.', true);
+    }
+  });
+
+  // Delete user account
+  async function deleteUserAccount(id, username) {
+    if (!confirm(`Tem certeza que deseja excluir permanentemente o acesso de "${username}"? Todos os leads, regras e casas deste usuário serão APAGADOS!`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(`Conta "${username}" excluída.`);
+        await loadUserAccounts();
+      } else {
+        showToast(data.error || 'Erro ao excluir conta.', true);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro de conexão.', true);
+    }
+  }
+
+  // ==========================================
   // UTILITIES
   // ==========================================
   function showToast(message, isError = false) {
@@ -872,7 +1048,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     toast.classList.remove('hide');
     
-    // Auto hide after 3 seconds
     setTimeout(() => {
       toast.classList.add('hide');
     }, 3000);

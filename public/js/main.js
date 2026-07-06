@@ -18,10 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Fetch initial data
   async function loadLandingData() {
     try {
-      const response = await fetch('/api/data');
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get('ref') || '';
+      
+      const response = await fetch(`/api/data?ref=${encodeURIComponent(ref)}`);
       if (!response.ok) throw new Error('Erro ao buscar dados');
       
       const data = await response.json();
+
       whatsappBaseUrl = data.whatsappUrl;
       availableHouses = data.houses;
       headlinePromoValue = data.headlineValue || 300;

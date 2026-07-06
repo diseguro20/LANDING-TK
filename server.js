@@ -37,22 +37,29 @@ function readLocalDataFile() {
     if (!fs.existsSync(LOCAL_DATA_FILE)) {
       fs.mkdirSync(path.dirname(LOCAL_DATA_FILE), { recursive: true });
       const defaultData = {
-        whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
-        adminPassword: "admin",
-        headlineValue: 300,
-        minHousesForBonus: 8,
-        opValuePerCpa: 3.12,
-        opBonus: 25.00,
-        leadValuePerCpa: 6.00,
-        leadBonus: 100.00,
-        operators: ["Takesh", "SK", "Deio", "TKAY", "Tito", "JEAN", "kaio", "thales", "marmelow", "maca"],
-        statuses: ["⏳ Em Andamento", "⏸️ Aguardando Lead", "✅ Concluído", "❌ Desistiu / Sumiu", "🚫 Golpe / Erro", "💢 Saque Não Caiu"],
+        users: [
+          { id: 1, username: "admin", password: "admin" }
+        ],
+        configs: [
+          {
+            user_id: 1,
+            whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
+            headlineValue: 300,
+            minHousesForBonus: 8,
+            opValuePerCpa: 3.12,
+            opBonus: 25.00,
+            leadValuePerCpa: 6.00,
+            leadBonus: 100.00,
+            operators: ["Takesh", "SK", "Deio", "TKAY", "Tito", "JEAN", "kaio", "thales", "marmelow", "maca"],
+            statuses: ["⏳ Em Andamento", "⏸️ Aguardando Lead", "✅ Concluído", "❌ Desistiu / Sumiu", "🚫 Golpe / Erro", "💢 Saque Não Caiu"]
+          }
+        ],
         houses: [
-          { "id": "1", "name": "SUPERBET", "emoji": "🔘", "color": "#f15a24", "value": 50, "active": true },
-          { "id": "2", "name": "SPORTINGBET", "emoji": "🔴", "color": "#0055a5", "value": 50, "active": true },
-          { "id": "3", "name": "Betboom", "emoji": "💥", "color": "#ffdd00", "value": 60, "active": true },
-          { "id": "4", "name": "Donald Bet", "emoji": "🦆", "color": "#ff9900", "value": 50, "active": true },
-          { "id": "5", "name": "BETBET", "emoji": "🟣", "color": "#8a2be2", "value": 70, "active": true }
+          { "id": "1", "user_id": 1, "name": "SUPERBET", "emoji": "🔘", "color": "#f15a24", "value": 50, "active": true },
+          { "id": "2", "user_id": 1, "name": "SPORTINGBET", "emoji": "🔴", "color": "#0055a5", "value": 50, "active": true },
+          { "id": "3", "user_id": 1, "name": "Betboom", "emoji": "💥", "color": "#ffdd00", "value": 60, "active": true },
+          { "id": "4", "user_id": 1, "name": "Donald Bet", "emoji": "🦆", "color": "#ff9900", "value": 50, "active": true },
+          { "id": "5", "user_id": 1, "name": "BETBET", "emoji": "🟣", "color": "#8a2be2", "value": 70, "active": true }
         ],
         leads: []
       };
@@ -63,20 +70,7 @@ function readLocalDataFile() {
     return JSON.parse(content);
   } catch (error) {
     console.error("Error reading data.json:", error);
-    return {
-      whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
-      adminPassword: "admin",
-      headlineValue: 300,
-      minHousesForBonus: 8,
-      opValuePerCpa: 3.12,
-      opBonus: 25.00,
-      leadValuePerCpa: 6.00,
-      leadBonus: 100.00,
-      operators: [],
-      statuses: [],
-      houses: [],
-      leads: []
-    };
+    return { users: [], configs: [], houses: [], leads: [] };
   }
 }
 
@@ -92,35 +86,113 @@ function writeLocalDataFile(data) {
 }
 
 // -------------------------------------------------------------
-// ASYNC DATABASE LAYER
+// ASYNC DATABASE LAYER (Multi-Tenant Support)
 // -------------------------------------------------------------
 
-async function getDbConfig() {
+async function getUserByUsername(username) {
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username.toLowerCase())
+      .maybeSingle();
+    return data;
+  } else {
+    const localData = readLocalDataFile();
+    return (localData.users || []).find(u => u.username === username.toLowerCase());
+  }
+}
+
+async function getUserById(id) {
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    return data;
+  } else {
+    const localData = readLocalDataFile();
+    return (localData.users || []).find(u => u.id === id);
+  }
+}
+
+async function getAllUsersList() {
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, username, created_at')
+      .order('id', { ascending: true });
+    return data || [];
+  } else {
+    const localData = readLocalDataFile();
+    return (localData.users || []).map(u => ({ id: u.id, username: u.username }));
+  }
+}
+
+async function createDbUser(username, password) {
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert({ username: username.toLowerCase(), password })
+      .select()
+      .single();
+    if (error) {
+      console.error("Supabase user insert error:", error);
+      return null;
+    }
+    return data;
+  } else {
+    const localData = readLocalDataFile();
+    if (!localData.users) localData.users = [];
+    const newUserId = localData.users.length > 0 ? Math.max(...localData.users.map(u => u.id)) + 1 : 1;
+    const newUser = { id: newUserId, username: username.toLowerCase(), password };
+    localData.users.push(newUser);
+    writeLocalDataFile(localData);
+    return newUser;
+  }
+}
+
+async function deleteDbUser(id) {
+  if (isSupabaseConfigured) {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    return !error;
+  } else {
+    const localData = readLocalDataFile();
+    localData.users = (localData.users || []).filter(u => u.id !== id);
+    localData.configs = (localData.configs || []).filter(c => c.user_id !== id);
+    localData.houses = (localData.houses || []).filter(h => h.user_id !== id);
+    localData.leads = (localData.leads || []).filter(l => l.user_id !== id);
+    return writeLocalDataFile(localData);
+  }
+}
+
+async function getDbConfig(userId) {
   if (isSupabaseConfigured) {
     const { data, error } = await supabase
       .from('configs')
       .select('*')
-      .eq('id', 1)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
     
-    if (error) {
-      console.error("Supabase config read error:", error);
+    if (error || !data) {
       return {
         whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
-        adminPassword: "admin",
-        headlineValue: 300,
         minHousesForBonus: 8,
         opValuePerCpa: 3.12,
         opBonus: 25.00,
         leadValuePerCpa: 6.00,
         leadBonus: 100.00,
         operators: "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
-        statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
+        statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu",
+        headlineValue: 300
       };
     }
     return {
       whatsappUrl: data.whatsapp_url,
-      adminPassword: data.admin_password,
       headlineValue: Number(data.headline_value),
       minHousesForBonus: Number(data.min_houses_for_bonus || 8),
       opValuePerCpa: Number(data.op_value_per_cpa || 3.12),
@@ -132,32 +204,43 @@ async function getDbConfig() {
     };
   } else {
     const localData = readLocalDataFile();
+    const config = (localData.configs || []).find(c => c.user_id === userId);
+    if (!config) {
+      return {
+        whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
+        headlineValue: 300,
+        minHousesForBonus: 8,
+        opValuePerCpa: 3.12,
+        opBonus: 25.00,
+        leadValuePerCpa: 6.00,
+        leadBonus: 100.00,
+        operators: "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
+        statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
+      };
+    }
     return {
-      whatsappUrl: localData.whatsappUrl,
-      adminPassword: localData.adminPassword,
-      headlineValue: localData.headlineValue || 300,
-      minHousesForBonus: localData.minHousesForBonus || 8,
-      opValuePerCpa: localData.opValuePerCpa || 3.12,
-      opBonus: localData.opBonus || 25.00,
-      leadValuePerCpa: localData.leadValuePerCpa || 6.00,
-      leadBonus: localData.leadBonus || 100.00,
-      operators: Array.isArray(localData.operators) ? localData.operators.join(", ") : (localData.operators || "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca"),
-      statuses: Array.isArray(localData.statuses) ? localData.statuses.join(", ") : (localData.statuses || "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu")
+      whatsappUrl: config.whatsappUrl,
+      headlineValue: config.headlineValue || 300,
+      minHousesForBonus: config.minHousesForBonus || 8,
+      opValuePerCpa: config.opValuePerCpa || 3.12,
+      opBonus: config.opBonus || 25.00,
+      leadValuePerCpa: config.leadValuePerCpa || 6.00,
+      leadBonus: config.leadBonus || 100.00,
+      operators: Array.isArray(config.operators) ? config.operators.join(", ") : (config.operators || "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca"),
+      statuses: Array.isArray(config.statuses) ? config.statuses.join(", ") : (config.statuses || "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu")
     };
   }
 }
 
-async function getDbHouses() {
+async function getDbHouses(userId) {
   if (isSupabaseConfigured) {
     const { data, error } = await supabase
       .from('houses')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: true });
     
-    if (error) {
-      console.error("Supabase houses read error:", error);
-      return [];
-    }
+    if (error) return [];
     return data.map(h => ({
       id: h.id,
       name: h.name,
@@ -168,15 +251,14 @@ async function getDbHouses() {
     }));
   } else {
     const localData = readLocalDataFile();
-    return localData.houses || [];
+    return (localData.houses || []).filter(h => h.user_id === userId);
   }
 }
 
-async function saveDbConfig(payload) {
+async function saveDbConfig(userId, payload) {
   if (isSupabaseConfigured) {
-    const updates = {};
+    const updates = { user_id: userId };
     if (payload.whatsappUrl !== undefined) updates.whatsapp_url = payload.whatsappUrl;
-    if (payload.adminPassword !== undefined) updates.admin_password = payload.adminPassword;
     if (payload.headlineValue !== undefined) updates.headline_value = Number(payload.headlineValue);
     if (payload.minHousesForBonus !== undefined) updates.min_houses_for_bonus = Number(payload.minHousesForBonus);
     if (payload.opValuePerCpa !== undefined) updates.op_value_per_cpa = Number(payload.opValuePerCpa);
@@ -186,10 +268,17 @@ async function saveDbConfig(payload) {
     if (payload.operators !== undefined) updates.operators = payload.operators;
     if (payload.statuses !== undefined) updates.statuses = payload.statuses;
 
-    const { error } = await supabase
-      .from('configs')
-      .update(updates)
-      .eq('id', 1);
+    // Check if config row exists
+    const { data } = await supabase.from('configs').select('user_id').eq('user_id', userId).maybeSingle();
+    
+    let error;
+    if (data) {
+      const res = await supabase.from('configs').update(updates).eq('user_id', userId);
+      error = res.error;
+    } else {
+      const res = await supabase.from('configs').insert(updates);
+      error = res.error;
+    }
     
     if (error) {
       console.error("Supabase config update error:", error);
@@ -198,35 +287,135 @@ async function saveDbConfig(payload) {
     return true;
   } else {
     const localData = readLocalDataFile();
-    if (payload.whatsappUrl !== undefined) localData.whatsappUrl = payload.whatsappUrl;
-    if (payload.adminPassword !== undefined) localData.adminPassword = payload.adminPassword;
-    if (payload.headlineValue !== undefined) localData.headlineValue = Number(payload.headlineValue);
-    if (payload.minHousesForBonus !== undefined) localData.minHousesForBonus = Number(payload.minHousesForBonus);
-    if (payload.opValuePerCpa !== undefined) localData.opValuePerCpa = Number(payload.opValuePerCpa);
-    if (payload.opBonus !== undefined) localData.opBonus = Number(payload.opBonus);
-    if (payload.leadValuePerCpa !== undefined) localData.leadValuePerCpa = Number(payload.leadValuePerCpa);
-    if (payload.leadBonus !== undefined) localData.leadBonus = Number(payload.leadBonus);
+    if (!localData.configs) localData.configs = [];
+    
+    let idx = localData.configs.findIndex(c => c.user_id === userId);
+    if (idx === -1) {
+      localData.configs.push({ user_id: userId });
+      idx = localData.configs.length - 1;
+    }
+    
+    if (payload.whatsappUrl !== undefined) localData.configs[idx].whatsappUrl = payload.whatsappUrl;
+    if (payload.headlineValue !== undefined) localData.configs[idx].headlineValue = Number(payload.headlineValue);
+    if (payload.minHousesForBonus !== undefined) localData.configs[idx].minHousesForBonus = Number(payload.minHousesForBonus);
+    if (payload.opValuePerCpa !== undefined) localData.configs[idx].opValuePerCpa = Number(payload.opValuePerCpa);
+    if (payload.opBonus !== undefined) localData.configs[idx].opBonus = Number(payload.opBonus);
+    if (payload.leadValuePerCpa !== undefined) localData.configs[idx].leadValuePerCpa = Number(payload.leadValuePerCpa);
+    if (payload.leadBonus !== undefined) localData.configs[idx].leadBonus = Number(payload.leadBonus);
     
     if (payload.operators !== undefined) {
-      localData.operators = payload.operators.split(",").map(s => s.strip());
+      localData.configs[idx].operators = payload.operators.split(",").map(s => s.trim());
     }
     if (payload.statuses !== undefined) {
-      localData.statuses = payload.statuses.split(",").map(s => s.strip());
+      localData.configs[idx].statuses = payload.statuses.split(",").map(s => s.trim());
     }
     
     return writeLocalDataFile(localData);
   }
 }
 
+async function addDbHouse(userId, house) {
+  if (isSupabaseConfigured) {
+    const { error } = await supabase
+      .from('houses')
+      .insert({
+        id: house.id,
+        user_id: userId,
+        name: house.name,
+        emoji: house.emoji,
+        color: house.color,
+        value: house.value,
+        active: house.active
+      });
+    return !error;
+  } else {
+    const localData = readLocalDataFile();
+    if (!localData.houses) localData.houses = [];
+    localData.houses.push({
+      id: house.id,
+      user_id: userId,
+      name: house.name,
+      emoji: house.emoji,
+      color: house.color,
+      value: house.value,
+      active: house.active
+    });
+    return writeLocalDataFile(localData);
+  }
+}
+
+async function updateDbHouse(userId, id, updates) {
+  if (isSupabaseConfigured) {
+    const dbUpdates = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.emoji !== undefined) dbUpdates.emoji = updates.emoji;
+    if (updates.color !== undefined) dbUpdates.color = updates.color;
+    if (updates.value !== undefined) dbUpdates.value = Number(updates.value);
+    if (updates.active !== undefined) dbUpdates.active = updates.active;
+
+    const { error } = await supabase
+      .from('houses')
+      .update(dbUpdates)
+      .eq('id', id)
+      .eq('user_id', userId);
+    return !error;
+  } else {
+    const localData = readLocalDataFile();
+    const idx = localData.houses.findIndex(h => h.id === id && h.user_id === userId);
+    if (idx === -1) return false;
+    
+    if (updates.name !== undefined) localData.houses[idx].name = updates.name;
+    if (updates.emoji !== undefined) localData.houses[idx].emoji = updates.emoji;
+    if (updates.color !== undefined) localData.houses[idx].color = updates.color;
+    if (updates.value !== undefined) localData.houses[idx].value = Number(updates.value);
+    if (updates.active !== undefined) localData.houses[idx].active = updates.active;
+    
+    return writeLocalDataFile(localData);
+  }
+}
+
+async function deleteDbHouse(userId, id) {
+  if (isSupabaseConfigured) {
+    const { error } = await supabase
+      .from('houses')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    return !error;
+  } else {
+    const localData = readLocalDataFile();
+    const filtered = (localData.houses || []).filter(h => !(h.id === id && h.user_id === userId));
+    if (localData.houses.length === filtered.length) return false;
+    localData.houses = filtered;
+    return writeLocalDataFile(localData);
+  }
+}
+
 // -------------------------------------------------------------
-// LEADS DATABASE LAYER
+// LEADS DATABASE LAYER (With Pagination & Multi-Tenant)
 // -------------------------------------------------------------
-async function getDbLeads(filters = {}) {
+async function getDbLeads(userId, filters = {}, pagination = {}) {
   const { search, operator, status, isClosed } = filters;
+  const { page = 1, limit = 50 } = pagination;
+  const offset = (page - 1) * limit;
   
   if (isSupabaseConfigured) {
-    let query = supabase.from('leads').select('*');
+    // 1. Fetch total counts for metrics/pagination
+    let baseQuery = supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+    if (operator) baseQuery = baseQuery.eq('operator', operator);
+    if (status) baseQuery = baseQuery.eq('status', status);
+    if (isClosed !== undefined && isClosed !== '') {
+      baseQuery = baseQuery.eq('is_closed', isClosed === 'true');
+    }
+    if (search) {
+      baseQuery = baseQuery.or(`name.ilike.%${search}%,whatsapp.ilike.%${search}%`);
+    }
     
+    const countRes = await baseQuery;
+    const totalCount = countRes.count || 0;
+
+    // 2. Fetch paginated records
+    let query = supabase.from('leads').select('*').eq('user_id', userId);
     if (operator) query = query.eq('operator', operator);
     if (status) query = query.eq('status', status);
     if (isClosed !== undefined && isClosed !== '') {
@@ -236,16 +425,18 @@ async function getDbLeads(filters = {}) {
       query = query.or(`name.ilike.%${search}%,whatsapp.ilike.%${search}%`);
     }
     
-    // Sort by date desc, then by id desc
-    query = query.order('date', { ascending: false }).order('id', { ascending: false });
+    query = query
+      .order('date', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, offset + limit - 1);
     
     const { data, error } = await query;
     if (error) {
       console.error("Supabase leads fetch error:", error);
-      return [];
+      return { leads: [], totalCount: 0 };
     }
     
-    return data.map(l => ({
+    const mapped = data.map(l => ({
       id: l.id,
       date: l.date,
       name: l.name,
@@ -257,9 +448,11 @@ async function getDbLeads(filters = {}) {
       isClosed: l.is_closed,
       indication: l.indication || ""
     }));
+
+    return { leads: mapped, totalCount };
   } else {
     const localData = readLocalDataFile();
-    let filtered = localData.leads || [];
+    let filtered = (localData.leads || []).filter(l => l.user_id === userId);
     
     if (operator) {
       filtered = filtered.filter(l => l.operator === operator);
@@ -269,7 +462,7 @@ async function getDbLeads(filters = {}) {
     }
     if (isClosed !== undefined && isClosed !== '') {
       const boolClosed = isClosed === 'true';
-      filtered = filtered.filter(l => l.isClosed === boolClosed || l.is_closed === boolClosed);
+      filtered = filtered.filter(l => (l.isClosed || l.is_closed) === boolClosed);
     }
     if (search) {
       const term = search.toLowerCase();
@@ -279,10 +472,13 @@ async function getDbLeads(filters = {}) {
       );
     }
     
-    // Sort by date desc
+    // Sort desc
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    return filtered.map(l => ({
+    const totalCount = filtered.length;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    const mapped = paginated.map(l => ({
       id: l.id,
       date: l.date,
       name: l.name,
@@ -294,14 +490,56 @@ async function getDbLeads(filters = {}) {
       isClosed: l.isClosed !== undefined ? l.isClosed : l.is_closed,
       indication: l.indication || ""
     }));
+
+    return { leads: mapped, totalCount };
   }
 }
 
-async function addDbLead(lead) {
+// Metrics for the entire database filtered (not paginated)
+async function getDbLeadsMetrics(userId, filters = {}) {
+  const { search, operator, status, isClosed } = filters;
+  
+  if (isSupabaseConfigured) {
+    let query = supabase.from('leads').select('completed_houses, losses').eq('user_id', userId);
+    if (operator) query = query.eq('operator', operator);
+    if (status) query = query.eq('status', status);
+    if (isClosed !== undefined && isClosed !== '') {
+      query = query.eq('is_closed', isClosed === 'true');
+    }
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,whatsapp.ilike.%${search}%`);
+    }
+    const { data, error } = await query;
+    if (error) return { totalLeads: 0, totalCpas: 0, totalLosses: 0, cpaCounts: [] };
+    
+    const cpaCounts = data.map(l => (l.completed_houses || []).length);
+    const totalLosses = data.reduce((acc, l) => acc + Number(l.losses || 0), 0);
+    
+    return {
+      totalLeads: data.length,
+      totalCpas: cpaCounts.reduce((a, b) => a + b, 0),
+      totalLosses,
+      cpaCounts
+    };
+  } else {
+    const { leads } = await getDbLeads(userId, filters, { page: 1, limit: 1000000 });
+    const cpaCounts = leads.map(l => l.completedHouses.length);
+    const totalLosses = leads.reduce((acc, l) => acc + l.losses, 0);
+    return {
+      totalLeads: leads.length,
+      totalCpas: cpaCounts.reduce((a, b) => a + b, 0),
+      totalLosses,
+      cpaCounts
+    };
+  }
+}
+
+async function addDbLead(userId, lead) {
   if (isSupabaseConfigured) {
     const { error } = await supabase
       .from('leads')
       .insert({
+        user_id: userId,
         date: lead.date,
         name: lead.name,
         whatsapp: lead.whatsapp,
@@ -312,18 +550,14 @@ async function addDbLead(lead) {
         is_closed: lead.isClosed || false,
         indication: lead.indication || ""
       });
-    
-    if (error) {
-      console.error("Supabase lead insert error:", error);
-      return false;
-    }
-    return true;
+    return !error;
   } else {
     const localData = readLocalDataFile();
     if (!localData.leads) localData.leads = [];
     
     const newLead = {
       id: Date.now(),
+      user_id: userId,
       date: lead.date,
       name: lead.name,
       whatsapp: lead.whatsapp,
@@ -340,7 +574,7 @@ async function addDbLead(lead) {
   }
 }
 
-async function updateDbLead(id, updates) {
+async function updateDbLead(userId, id, updates) {
   if (isSupabaseConfigured) {
     const dbUpdates = {};
     if (updates.date !== undefined) dbUpdates.date = updates.date;
@@ -356,16 +590,12 @@ async function updateDbLead(id, updates) {
     const { error } = await supabase
       .from('leads')
       .update(dbUpdates)
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Supabase lead update error:", error);
-      return false;
-    }
-    return true;
+      .eq('id', id)
+      .eq('user_id', userId);
+    return !error;
   } else {
     const localData = readLocalDataFile();
-    const idx = localData.leads.findIndex(l => String(l.id) === String(id));
+    const idx = localData.leads.findIndex(l => String(l.id) === String(id) && l.user_id === userId);
     if (idx === -1) return false;
     
     if (updates.date !== undefined) localData.leads[idx].date = updates.date;
@@ -382,23 +612,18 @@ async function updateDbLead(id, updates) {
   }
 }
 
-async function deleteDbLead(id) {
+async function deleteDbLead(userId, id) {
   if (isSupabaseConfigured) {
     const { error } = await supabase
       .from('leads')
       .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Supabase lead delete error:", error);
-      return false;
-    }
-    return true;
+      .eq('id', id)
+      .eq('user_id', userId);
+    return !error;
   } else {
     const localData = readLocalDataFile();
-    const filtered = (localData.leads || []).filter(l => String(l.id) !== String(id));
+    const filtered = (localData.leads || []).filter(l => !(String(l.id) === String(id) && l.user_id === userId));
     if (localData.leads.length === filtered.length) return false;
-    
     localData.leads = filtered;
     return writeLocalDataFile(localData);
   }
@@ -414,11 +639,22 @@ async function authMiddleware(req, res, next) {
   }
   
   const token = authHeader.split(' ')[1];
+  const parts = token.split(':');
+  if (parts.length < 2) {
+    return res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' });
+  }
+
+  const userId = Number(parts[0]);
+  const username = parts[1];
+
   try {
-    const config = await getDbConfig();
-    if (token !== config.adminPassword) {
-      return res.status(403).json({ error: 'Senha inválida ou sessão expirada.' });
+    const user = await getUserById(userId);
+    if (!user || user.username !== username) {
+      return res.status(401).json({ error: 'Sessão expirada. Faça login novamente.' });
     }
+    
+    req.userId = user.id;
+    req.username = user.username;
     next();
   } catch (err) {
     console.error(err);
@@ -430,11 +666,21 @@ async function authMiddleware(req, res, next) {
 // EXPRESS ROUTES
 // -------------------------------------------------------------
 
-// PUBLIC: Get public config and active houses
+// PUBLIC: Get public config and active houses (Supports ?ref=username)
 app.get('/api/data', async (req, res) => {
+  const refUsername = req.query.ref;
+  let targetUserId = 1; // Default to main admin (id 1)
+  
   try {
-    const config = await getDbConfig();
-    const houses = await getDbHouses();
+    if (refUsername) {
+      const tenant = await getUserByUsername(refUsername);
+      if (tenant) {
+        targetUserId = tenant.id;
+      }
+    }
+    
+    const config = await getDbConfig(targetUserId);
+    const houses = await getDbHouses(targetUserId);
     const activeHouses = houses.filter(h => h.active !== false);
     
     res.json({
@@ -448,19 +694,20 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
-// PUBLIC: Admin login check
+// PUBLIC: Multi-tenant login check
 app.post('/api/login', async (req, res) => {
-  const { password } = req.body;
-  if (!password) {
-    return res.status(400).json({ error: 'Senha é obrigatória.' });
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
   }
   
   try {
-    const config = await getDbConfig();
-    if (password === config.adminPassword) {
-      res.json({ success: true, token: config.adminPassword });
+    const user = await getUserByUsername(username);
+    if (user && user.password === password) {
+      // Return token in the format "userId:username"
+      res.json({ success: true, token: `${user.id}:${user.username}` });
     } else {
-      res.status(401).json({ error: 'Senha incorreta.' });
+      res.status(401).json({ error: 'Usuário ou senha incorretos.' });
     }
   } catch (err) {
     console.error(err);
@@ -468,18 +715,15 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ADMIN: Get full dashboard configurations
+// ADMIN: Get dashboard configurations for the logged-in user
 app.get('/api/admin/data', authMiddleware, async (req, res) => {
   try {
-    const config = await getDbConfig();
-    const houses = await getDbHouses();
+    const config = await getDbConfig(req.userId);
+    const houses = await getDbHouses(req.userId);
     
     res.json({
       whatsappUrl: config.whatsappUrl,
-      adminPassword: config.adminPassword,
       headlineValue: config.headlineValue,
-      
-      // New configurations fields
       minHousesForBonus: config.minHousesForBonus,
       opValuePerCpa: config.opValuePerCpa,
       opBonus: config.opBonus,
@@ -487,8 +731,8 @@ app.get('/api/admin/data', authMiddleware, async (req, res) => {
       leadBonus: config.leadBonus,
       operators: config.operators,
       statuses: config.statuses,
-      
-      houses: houses
+      houses: houses,
+      username: req.username // lets UI know if they are superadmin 'admin'
     });
   } catch (err) {
     console.error(err);
@@ -499,9 +743,10 @@ app.get('/api/admin/data', authMiddleware, async (req, res) => {
 // ADMIN: Save global configurations
 app.post('/api/admin/config', authMiddleware, async (req, res) => {
   const { 
-    whatsappUrl, adminPassword, headlineValue,
+    whatsappUrl, headlineValue,
     minHousesForBonus, opValuePerCpa, opBonus,
-    leadValuePerCpa, leadBonus, operators, statuses
+    leadValuePerCpa, leadBonus, operators, statuses,
+    adminPassword // password changes
   } = req.body;
   
   if (!whatsappUrl) {
@@ -509,17 +754,29 @@ app.post('/api/admin/config', authMiddleware, async (req, res) => {
   }
   
   try {
-    const success = await saveDbConfig({
-      whatsappUrl, adminPassword, headlineValue,
+    const success = await saveDbConfig(req.userId, {
+      whatsappUrl, headlineValue,
       minHousesForBonus, opValuePerCpa, opBonus,
       leadValuePerCpa, leadBonus, operators, statuses
     });
     
     if (success) {
-      const config = await getDbConfig();
-      res.json({ success: true, message: 'Configurações salvas!', token: config.adminPassword });
+      // If password update requested, update users table
+      if (adminPassword && adminPassword.trim() !== '') {
+        if (isSupabaseConfigured) {
+          await supabase.from('users').update({ password: adminPassword.trim() }).eq('id', req.userId);
+        } else {
+          const localData = readLocalDataFile();
+          const uIdx = localData.users.findIndex(u => u.id === req.userId);
+          if (uIdx !== -1) {
+            localData.users[uIdx].password = adminPassword.trim();
+            writeLocalDataFile(localData);
+          }
+        }
+      }
+      res.json({ success: true, message: 'Configurações salvas!' });
     } else {
-      res.status(500).json({ error: 'Erro ao salvar as configurações no banco.' });
+      res.status(500).json({ error: 'Erro ao salvar as configurações.' });
     }
   } catch (err) {
     console.error(err);
@@ -527,7 +784,7 @@ app.post('/api/admin/config', authMiddleware, async (req, res) => {
   }
 });
 
-// ADMIN: Houses endpoints (already verified)
+// ADMIN: Houses endpoints (Multi-Tenant)
 app.post('/api/admin/houses', authMiddleware, async (req, res) => {
   const { name, emoji, color, value, active } = req.body;
   if (!name || !value) return res.status(400).json({ error: 'Nome e Valor são obrigatórios.' });
@@ -542,7 +799,7 @@ app.post('/api/admin/houses', authMiddleware, async (req, res) => {
   };
   
   try {
-    const success = await addDbHouse(newHouse);
+    const success = await addDbHouse(req.userId, newHouse);
     if (success) res.status(201).json(newHouse);
     else res.status(500).json({ error: 'Erro ao criar a casa no banco.' });
   } catch (err) {
@@ -554,7 +811,7 @@ app.put('/api/admin/houses/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { name, emoji, color, value, active } = req.body;
   try {
-    const success = await updateDbHouse(id, { name, emoji, color, value, active });
+    const success = await updateDbHouse(req.userId, id, { name, emoji, color, value, active });
     if (success) res.json({ success: true });
     else res.status(500).json({ error: 'Erro ao atualizar.' });
   } catch (err) {
@@ -565,7 +822,7 @@ app.put('/api/admin/houses/:id', authMiddleware, async (req, res) => {
 app.delete('/api/admin/houses/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    const success = await deleteDbHouse(id);
+    const success = await deleteDbHouse(req.userId, id);
     if (success) res.json({ success: true });
     else res.status(500).json({ error: 'Erro ao excluir.' });
   } catch (err) {
@@ -574,15 +831,36 @@ app.delete('/api/admin/houses/:id', authMiddleware, async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// LEADS API ENDPOINTS
+// LEADS API ENDPOINTS (With Pagination & Metrics)
 // -------------------------------------------------------------
 
-// ADMIN: GET all leads with filters
+// ADMIN: GET all leads with filters & pagination
 app.get('/api/admin/leads', authMiddleware, async (req, res) => {
   const { search, operator, status, isClosed } = req.query;
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 50);
+  
   try {
-    const leads = await getDbLeads({ search, operator, status, isClosed });
-    res.json(leads);
+    // 1. Get filtered paginated leads
+    const { leads, totalCount } = await getDbLeads(
+      req.userId, 
+      { search, operator, status, isClosed },
+      { page, limit }
+    );
+    
+    // 2. Get full filtered metrics (for the stats cards)
+    const metrics = await getDbLeadsMetrics(req.userId, { search, operator, status, isClosed });
+    
+    res.json({
+      leads,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      },
+      metrics
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao obter listagem de leads.' });
@@ -598,7 +876,7 @@ app.post('/api/admin/leads', authMiddleware, async (req, res) => {
   }
   
   try {
-    const success = await addDbLead({
+    const success = await addDbLead(req.userId, {
       date,
       name: name.trim(),
       whatsapp: whatsapp ? whatsapp.trim() : "",
@@ -627,7 +905,7 @@ app.put('/api/admin/leads/:id', authMiddleware, async (req, res) => {
   const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, indication } = req.body;
   
   try {
-    const success = await updateDbLead(id, {
+    const success = await updateDbLead(req.userId, id, {
       date,
       name,
       whatsapp,
@@ -654,7 +932,7 @@ app.put('/api/admin/leads/:id', authMiddleware, async (req, res) => {
 app.delete('/api/admin/leads/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    const success = await deleteDbLead(id);
+    const success = await deleteDbLead(req.userId, id);
     if (success) {
       res.json({ success: true, message: 'Lead excluído.' });
     } else {
@@ -663,6 +941,105 @@ app.delete('/api/admin/leads/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro no servidor ao remover lead.' });
+  }
+});
+
+// -------------------------------------------------------------
+// USER MANAGEMENT ENDPOINTS (Superadmin Only)
+// -------------------------------------------------------------
+
+app.get('/api/admin/users', authMiddleware, async (req, res) => {
+  if (req.username !== 'admin') {
+    return res.status(403).json({ error: 'Apenas a conta superadmin pode gerenciar outras contas.' });
+  }
+  
+  try {
+    const users = await getAllUsersList();
+    // Filter out the superadmin itself from the manageable list
+    const filteredUsers = users.filter(u => u.username !== 'admin');
+    res.json(filteredUsers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao carregar usuários.' });
+  }
+});
+
+app.post('/api/admin/users', authMiddleware, async (req, res) => {
+  if (req.username !== 'admin') {
+    return res.status(403).json({ error: 'Apenas a conta superadmin pode gerenciar outras contas.' });
+  }
+
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
+  }
+
+  try {
+    // Check if user exists
+    const existing = await getUserByUsername(username);
+    if (existing) {
+      return res.status(400).json({ error: 'Este nome de usuário já está em uso.' });
+    }
+
+    // Create user
+    const newUser = await createDbUser(username, password);
+    if (!newUser) {
+      return res.status(500).json({ error: 'Erro ao criar o usuário.' });
+    }
+
+    // Create default configs for new user
+    await saveDbConfig(newUser.id, {
+      whatsappUrl: "https://chat.whatsapp.com/ExemploGrupoBancasGratis",
+      headlineValue: 300,
+      minHousesForBonus: 8,
+      opValuePerCpa: 3.12,
+      opBonus: 25.00,
+      leadValuePerCpa: 6.00,
+      leadBonus: 100.00,
+      operators: "Takesh, SK, Deio, TKAY, Tito, JEAN, kaio, thales, marmelow, maca",
+      statuses: "⏳ Em Andamento, ⏸️ Aguardando Lead, ✅ Concluído, ❌ Desistiu / Sumiu, 🚫 Golpe / Erro, 💢 Saque Não Caiu"
+    });
+
+    // Create default houses for new user
+    const defaultHouses = [
+      { id: "1", name: "SUPERBET", emoji: "🔘", color: "#f15a24", value: 50, active: true },
+      { id: "2", name: "SPORTINGBET", emoji: "🔴", color: "#0055a5", value: 50, active: true },
+      { id: "3", name: "Betboom", emoji: "💥", color: "#ffdd00", value: 60, active: true },
+      { id: "4", name: "Donald Bet", emoji: "🦆", color: "#ff9900", value: 50, active: true },
+      { id: "5", name: "BETBET", emoji: "🟣", color: "#8a2be2", value: 70, active: true }
+    ];
+
+    for (const h of defaultHouses) {
+      await addDbHouse(newUser.id, h);
+    }
+
+    res.status(201).json({ success: true, message: 'Usuário cadastrado com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro no servidor ao criar usuário.' });
+  }
+});
+
+app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
+  if (req.username !== 'admin') {
+    return res.status(403).json({ error: 'Apenas a conta superadmin pode gerenciar outras contas.' });
+  }
+
+  const userId = Number(req.params.id);
+  if (userId === 1 || userId === req.userId) {
+    return res.status(400).json({ error: 'Não é possível excluir a conta superadmin.' });
+  }
+
+  try {
+    const success = await deleteDbUser(userId);
+    if (success) {
+      res.json({ success: true, message: 'Usuário e todas as suas configurações/leads foram excluídos.' });
+    } else {
+      res.status(500).json({ error: 'Erro ao excluir o usuário.' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro no servidor ao excluir usuário.' });
   }
 });
 

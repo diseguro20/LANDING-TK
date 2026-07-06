@@ -24,12 +24,17 @@
       <div class="login-header">
         <i class="fa-solid fa-lock-open"></i>
         <h2>Painel Administrativo</h2>
-        <p>Acesse com a sua senha de segurança</p>
+        <p>Faça login com a sua conta de acesso</p>
       </div>
       
       <form id="login-form">
         <div class="form-group">
-          <label for="password-input">Senha de Acesso</label>
+          <label for="username-input">Usuário</label>
+          <input type="text" id="username-input" placeholder="Digite seu usuário..." required autocomplete="username">
+        </div>
+        
+        <div class="form-group">
+          <label for="password-input">Senha</label>
           <div class="password-wrapper">
             <input type="password" id="password-input" placeholder="Digite a senha..." required autocomplete="current-password">
             <button type="button" id="toggle-password-view">
@@ -37,7 +42,8 @@
             </button>
           </div>
         </div>
-        <div id="login-error" class="error-alert hide">Senha incorreta. Tente novamente.</div>
+        
+        <div id="login-error" class="error-alert hide">Usuário ou senha incorretos.</div>
         <button type="submit" class="btn-primary btn-block">ENTRAR NO PAINEL</button>
       </form>
     </div>
@@ -51,7 +57,7 @@
       <div class="container header-container">
         <div class="admin-brand">
           <i class="fa-solid fa-gauge-high"></i>
-          <h1>Painel Admin <span>Lucro Máximo</span></h1>
+          <h1>Painel Admin <span id="logged-user-title">Lucro Máximo</span></h1>
         </div>
         
         <!-- Tab Navigation -->
@@ -62,10 +68,13 @@
           <button class="tab-btn" data-tab="tab-settings">
             <i class="fa-solid fa-sliders"></i> Regras & Casas
           </button>
+          <button class="tab-btn hide" id="tab-btn-users" data-tab="tab-users">
+            <i class="fa-solid fa-users-gear"></i> Contas de Acesso
+          </button>
         </nav>
 
         <div class="admin-actions">
-          <a href="/" target="_blank" class="btn-secondary"><i class="fa-solid fa-eye"></i> Ver Site</a>
+          <a href="/" target="_blank" class="btn-secondary" id="btn-view-site-link"><i class="fa-solid fa-eye"></i> Ver Site</a>
           <button id="btn-logout" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
         </div>
       </div>
@@ -183,6 +192,18 @@
                   </tbody>
                 </table>
               </div>
+              
+              <!-- Pagination Controls -->
+              <div class="pagination-container" id="leads-pagination-wrapper">
+                <button id="btn-prev-page" class="btn-page-nav" disabled>
+                  <i class="fa-solid fa-chevron-left"></i> Anterior
+                </button>
+                <span class="page-indicator" id="page-indicator">Página 1 de 1</span>
+                <button id="btn-next-page" class="btn-page-nav" disabled>
+                  Próxima <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+
             </div>
           </div>
 
@@ -260,7 +281,7 @@
 
                     <h3 class="settings-subsection-title">Segurança</h3>
                     <div class="form-group">
-                      <label for="admin-password-input">Nova Senha do Painel (opcional)</label>
+                      <label for="admin-password-input">Nova Senha de Acesso (opcional)</label>
                       <input type="password" id="admin-password-input" placeholder="Deixe em branco para manter a atual">
                     </div>
                     
@@ -347,6 +368,74 @@
                 </div>
               </div>
 
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==========================================
+             TAB 3: CONTAS DE ACESSO (Superadmin Only)
+             ========================================== -->
+        <div id="tab-users" class="tab-content-panel hide">
+          
+          <div class="admin-grid">
+            
+            <!-- Create User Account -->
+            <div class="admin-col">
+              <div class="card">
+                <div class="card-header">
+                  <i class="fa-solid fa-user-plus"></i>
+                  <h2>Criar Conta de Acesso</h2>
+                </div>
+                <div class="card-body">
+                  <form id="add-user-form">
+                    <div class="form-group">
+                      <label for="new-username-input">Usuário (Username)</label>
+                      <input type="text" id="new-username-input" placeholder="Ex: takesh" required autocomplete="username">
+                      <small class="form-helper">Este será o usuário de login e definirá o link customizado (ex: ?ref=takesh).</small>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="new-password-input">Senha da Conta</label>
+                      <input type="text" id="new-password-input" placeholder="Digite a senha..." required autocomplete="new-password">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary btn-block"><i class="fa-solid fa-user-plus"></i> Criar Conta</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active User Accounts list -->
+            <div class="admin-col">
+              <div class="card">
+                <div class="card-header list-header">
+                  <div>
+                    <i class="fa-solid fa-users-gear"></i>
+                    <h2>Contas Ativas</h2>
+                  </div>
+                  <span class="badge" id="users-total-badge">0</span>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="houses-table">
+                      <thead>
+                        <tr>
+                          <th>Usuário</th>
+                          <th>Link Customizado</th>
+                          <th class="text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-users-tbody">
+                        <tr>
+                          <td colspan="3" class="text-center py-20">Carregando contas cadastradas...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
