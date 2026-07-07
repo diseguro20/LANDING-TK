@@ -787,3 +787,160 @@ textarea {
   font-weight: 500;
 }
 
+/* ==========================================
+   MOBILE & TABLET RESPONSIVE RULES (100% RESPONSIVE)
+   ========================================== */
+
+/* Tablet & Mobile Screens */
+@media (max-width: 1024px) {
+  .header-container {
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .tab-navigation {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .admin-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .admin-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile Screens Only */
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 15px 10px;
+  }
+  
+  .admin-brand h1 {
+    font-size: 1.2rem;
+  }
+  
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  
+  .metric-card {
+    padding: 15px;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  
+  .card-header.list-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .card-header.list-header button {
+    width: 100%;
+  }
+  
+  /* Table Stack to Card Layout */
+  .leads-table thead, 
+  .houses-table thead {
+    display: none !important;
+  }
+  
+  .leads-table tr, 
+  .houses-table tr {
+    display: block !important;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: rgba(255,255,255,0.02);
+    margin-bottom: 12px;
+    padding: 12px 15px;
+  }
+  
+  .leads-table td, 
+  .houses-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    text-align: right !important;
+    font-size: 0.85rem !important;
+  }
+  
+  .leads-table td:last-child, 
+  .houses-table td:last-child {
+    border-bottom: none !important;
+  }
+  
+  .leads-table td::before, 
+  .houses-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: left;
+    margin-right: 15px;
+    font-size: 0.8rem;
+  }
+  
+  /* Reset center alignments in stacked td cells */
+  .leads-table td.text-center, 
+  .houses-table td.text-center {
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 15px 0 !important;
+  }
+  .leads-table td.text-center::before, 
+  .houses-table td.text-center::before {
+    display: none !important;
+  }
+  
+  /* Actions buttons wrapper */
+  .action-buttons {
+    justify-content: flex-end;
+  }
+  
+  /* Modal Card Fitting */
+  .modal-card {
+    width: 95% !important;
+    max-height: 95vh !important;
+    margin: 10px auto !important;
+    padding: 15px !important;
+  }
+  
+  .form-row {
+    flex-direction: column !important;
+  }
+  
+  .form-row .col-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Fix dropdown select width in mobile cells */
+  .toggle-payment-select {
+    width: auto;
+    max-width: 150px;
+  }
+}
+
+

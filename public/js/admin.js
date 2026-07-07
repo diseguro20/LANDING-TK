@@ -514,11 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
         : `<span class="house-status-badge status-inactive">Inativo</span>`;
 
       tr.innerHTML = `
-        <td><span style="font-size: 1.4rem;">${house.emoji || '🔘'}</span></td>
-        <td><strong style="color: ${house.color || '#fff'}">${house.name}</strong></td>
-        <td>R$ ${house.value.toFixed(2)}</td>
-        <td>${statusBadge}</td>
-        <td class="text-right">
+        <td data-label="Emoji"><span style="font-size: 1.4rem;">${house.emoji || '🔘'}</span></td>
+        <td data-label="Nome"><strong style="color: ${house.color || '#fff'}">${house.name}</strong></td>
+        <td data-label="Valor">R$ ${house.value.toFixed(2)}</td>
+        <td data-label="Status">${statusBadge}</td>
+        <td data-label="Ações" class="text-right">
           <div class="action-buttons">
             <button class="btn-secondary btn-icon btn-edit-house" data-id="${house.id}"><i class="fa-solid fa-pen"></i></button>
             <button class="btn-danger btn-icon btn-delete-house" data-id="${house.id}"><i class="fa-solid fa-trash"></i></button>
@@ -585,31 +585,31 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch(e){}
 
       tr.innerHTML = `
-        <td>${formattedDate}</td>
-        <td>
+        <td data-label="Data">${formattedDate}</td>
+        <td data-label="Nome / WhatsApp">
           <div style="font-weight: 700;">${lead.name}</div>
           <div style="font-size: 0.75rem; color: var(--text-muted);">${lead.whatsapp || '-'}</div>
         </td>
-        <td>${lead.operator}</td>
-        <td><span class="lead-status-badge">${lead.status}</span></td>
-        <td>
+        <td data-label="Operador(a)">${lead.operator}</td>
+        <td data-label="Status"><span class="lead-status-badge">${lead.status}</span></td>
+        <td data-label="CPAs">
           <span class="badge" style="background-color: var(--border-color); cursor: help;" title="${housesTooltip}">
             ${cpaCount} / ${housesData.length}
           </span>
         </td>
-        <td><strong style="color: var(--success);">R$ ${leadPay.toFixed(2)}</strong></td>
-        <td><strong style="color: var(--primary);">R$ ${opPay.toFixed(2)}</strong></td>
-        <td style="${lead.losses > 0 ? 'color: var(--danger); font-weight: 600;' : ''}">R$ ${lead.losses.toFixed(2)}</td>
-        <td>
+        <td data-label="Pagamento Lead"><strong style="color: var(--success);">R$ ${leadPay.toFixed(2)}</strong></td>
+        <td data-label="Comissão OP"><strong style="color: var(--primary);">R$ ${opPay.toFixed(2)}</strong></td>
+        <td data-label="Perdas" style="${lead.losses > 0 ? 'color: var(--danger); font-weight: 600;' : ''}">R$ ${lead.losses.toFixed(2)}</td>
+        <td data-label="Encerrado">
           <input type="checkbox" class="toggle-closed-checkbox" data-id="${lead.id}" ${checkedAttr} style="width:16px; height:16px; cursor:pointer;">
         </td>
-        <td>
+        <td data-label="Pagamento">
           <select class="toggle-payment-select" data-id="${lead.id}" style="background-color: var(--bg-darkest); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; cursor: pointer;">
             <option value="Aguardando" ${lead.paymentStatus === 'Aguardando' ? 'selected' : ''}>⏳ Aguardando</option>
             <option value="Pago" ${lead.paymentStatus === 'Pago' ? 'selected' : ''}>✅ Pago</option>
           </select>
         </td>
-        <td class="text-right">
+        <td data-label="Ações" class="text-right">
           <div class="action-buttons">
             <button class="btn-secondary btn-icon btn-edit-lead" data-id="${lead.id}"><i class="fa-solid fa-pen-to-square"></i></button>
             <button class="btn-danger btn-icon btn-delete-lead" data-id="${lead.id}"><i class="fa-solid fa-user-minus"></i></button>
@@ -1048,9 +1048,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const customUrl = `${currentOrigin}/?ref=${u.username}`;
 
       tr.innerHTML = `
-        <td><strong style="color: var(--primary);">${u.username}</strong></td>
-        <td><a href="${customUrl}" target="_blank" style="color: var(--success); text-decoration: underline;">${customUrl}</a></td>
-        <td class="text-right">
+        <td data-label="Usuário"><strong style="color: var(--primary);">${u.username}</strong></td>
+        <td data-label="Link Customizado"><a href="${customUrl}" target="_blank" style="color: var(--success); text-decoration: underline;">${customUrl}</a></td>
+        <td data-label="Ações" class="text-right">
           <button class="btn-danger btn-icon btn-delete-user" data-id="${u.id}" data-username="${u.username}">
             <i class="fa-solid fa-trash"></i> Excluir
           </button>
