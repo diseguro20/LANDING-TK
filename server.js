@@ -494,7 +494,6 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
     }
     
     query = query
-      .order('date', { ascending: false })
       .order('id', { ascending: false })
       .range(offset, offset + limit - 1);
     
@@ -541,7 +540,7 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
       );
     }
     
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtered.sort((a, b) => b.id - a.id);
     
     const totalCount = filtered.length;
     const paginated = filtered.slice(offset, offset + limit);
