@@ -588,8 +588,11 @@ textarea {
    TABLES STYLING
    ========================================== */
 .table-responsive {
+  display: block;
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
