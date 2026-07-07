@@ -514,6 +514,7 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
       completedHouses: l.completed_houses || [],
       losses: Number(l.losses || 0),
       isClosed: l.is_closed,
+      paymentStatus: l.payment_status || "Aguardando",
       indication: l.indication || ""
     }));
 
@@ -555,6 +556,7 @@ async function getDbLeads(userId, filters = {}, pagination = {}) {
       completedHouses: l.completedHouses || l.completed_houses || [],
       losses: Number(l.losses || 0),
       isClosed: l.isClosed !== undefined ? l.isClosed : l.is_closed,
+      paymentStatus: l.paymentStatus || l.payment_status || "Aguardando",
       indication: l.indication || ""
     }));
 
@@ -614,6 +616,7 @@ async function addDbLead(userId, lead) {
         completed_houses: lead.completedHouses,
         losses: Number(lead.losses || 0),
         is_closed: lead.isClosed || false,
+        payment_status: lead.paymentStatus || "Aguardando",
         indication: lead.indication || ""
       });
     return !error;
@@ -632,6 +635,7 @@ async function addDbLead(userId, lead) {
       completedHouses: lead.completedHouses || [],
       losses: Number(lead.losses || 0),
       isClosed: lead.isClosed || false,
+      paymentStatus: lead.paymentStatus || "Aguardando",
       indication: lead.indication || ""
     };
     
@@ -651,6 +655,7 @@ async function updateDbLead(userId, id, updates) {
     if (updates.completedHouses !== undefined) dbUpdates.completed_houses = updates.completedHouses;
     if (updates.losses !== undefined) dbUpdates.losses = Number(updates.losses);
     if (updates.isClosed !== undefined) dbUpdates.is_closed = updates.isClosed;
+    if (updates.paymentStatus !== undefined) dbUpdates.payment_status = updates.paymentStatus;
     if (updates.indication !== undefined) dbUpdates.indication = updates.indication;
 
     const { error } = await supabase
@@ -672,6 +677,7 @@ async function updateDbLead(userId, id, updates) {
     if (updates.completedHouses !== undefined) localData.leads[idx].completedHouses = updates.completedHouses;
     if (updates.losses !== undefined) localData.leads[idx].losses = Number(updates.losses);
     if (updates.isClosed !== undefined) localData.leads[idx].isClosed = updates.isClosed;
+    if (updates.paymentStatus !== undefined) localData.leads[idx].paymentStatus = updates.paymentStatus;
     if (updates.indication !== undefined) localData.leads[idx].indication = updates.indication;
     
     return writeLocalDataFile(localData);
@@ -990,7 +996,7 @@ app.get('/api/admin/leads', authMiddleware, async (req, res) => {
 
 // ADMIN: POST create new lead
 app.post('/api/admin/leads', authMiddleware, async (req, res) => {
-  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, indication } = req.body;
+  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, paymentStatus, indication } = req.body;
   
   if (!date || !name) {
     return res.status(400).json({ error: 'Data e Nome são obrigatórios.' });
@@ -1006,6 +1012,7 @@ app.post('/api/admin/leads', authMiddleware, async (req, res) => {
       completedHouses: completedHouses || [],
       losses: losses || 0,
       isClosed: isClosed || false,
+      paymentStatus: paymentStatus || "Aguardando",
       indication: indication || ""
     });
     
@@ -1023,7 +1030,7 @@ app.post('/api/admin/leads', authMiddleware, async (req, res) => {
 // ADMIN: PUT update lead
 app.put('/api/admin/leads/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, indication } = req.body;
+  const { date, name, whatsapp, operator, status, completedHouses, losses, isClosed, paymentStatus, indication } = req.body;
   
   try {
     const success = await updateDbLead(req.userId, id, {
@@ -1035,6 +1042,7 @@ app.put('/api/admin/leads/:id', authMiddleware, async (req, res) => {
       completedHouses,
       losses,
       isClosed,
+      paymentStatus,
       indication
     });
     

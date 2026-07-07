@@ -187,12 +187,13 @@
                       <th>Comissão OP</th>
                       <th>Perdas</th>
                       <th>Encerrado</th>
+                      <th>Pagamento</th>
                       <th class="text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody id="admin-leads-tbody">
                     <tr>
-                      <td colspan="10" class="text-center py-20">Carregando listagem de leads...</td>
+                      <td colspan="11" class="text-center py-20">Carregando listagem de leads...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -557,7 +558,17 @@
               <label for="lead-indication-input">Indicação / Notas</label>
               <input type="text" id="lead-indication-input" placeholder="Ex: Convidado de X">
             </div>
-            <div class="form-group col-6 checkbox-group" style="padding-top: 30px;">
+            <div class="form-group col-6">
+              <label for="lead-payment-input">Status de Pagamento</label>
+              <select id="lead-payment-input">
+                <option value="Aguardando">⏳ Aguardando Pagamento</option>
+                <option value="Pago">✅ Pago</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6 checkbox-group" style="padding-top: 10px;">
               <input type="checkbox" id="lead-closed-input">
               <label for="lead-closed-input">Ficha Encerrada? (Concluiu atendimento)</label>
             </div>

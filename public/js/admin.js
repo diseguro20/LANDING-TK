@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const leadLossesInput = document.getElementById('lead-losses-input');
   const leadIndicationInput = document.getElementById('lead-indication-input');
   const leadClosedInput = document.getElementById('lead-closed-input');
+  const leadPaymentInput = document.getElementById('lead-payment-input');
   const leadHousesCheckGrid = document.getElementById('lead-houses-check-grid');
   const cancelLeadModalBtn = document.getElementById('cancel-lead-modal-btn');
   const closeLeadModalBtn = document.getElementById('close-lead-modal-btn');
@@ -556,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (leadsData.length === 0) {
       adminLeadsTbody.innerHTML = `
         <tr>
-          <td colspan="10" class="text-center py-20">Nenhum lead encontrado nesta página.</td>
+          <td colspan="11" class="text-center py-20">Nenhum lead encontrado nesta página.</td>
         </tr>
       `;
       return;
@@ -602,6 +603,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>
           <input type="checkbox" class="toggle-closed-checkbox" data-id="${lead.id}" ${checkedAttr} style="width:16px; height:16px; cursor:pointer;">
         </td>
+        <td>
+          <select class="toggle-payment-select" data-id="${lead.id}" style="background-color: var(--bg-darkest); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; cursor: pointer;">
+            <option value="Aguardando" ${lead.paymentStatus === 'Aguardando' ? 'selected' : ''}>⏳ Aguardando</option>
+            <option value="Pago" ${lead.paymentStatus === 'Pago' ? 'selected' : ''}>✅ Pago</option>
+          </select>
+        </td>
         <td class="text-right">
           <div class="action-buttons">
             <button class="btn-secondary btn-icon btn-edit-lead" data-id="${lead.id}"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -615,6 +622,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetId = e.target.dataset.id;
         const isClosed = e.target.checked;
         await fastToggleLeadClosed(targetId, isClosed);
+      });
+
+      // Inline Change select listener for fast payment status changes
+      tr.querySelector('.toggle-payment-select').addEventListener('change', async (e) => {
+        const targetId = e.target.dataset.id;
+        const paymentStatus = e.target.value;
+        await fastToggleLeadPayment(targetId, paymentStatus);
       });
 
       tr.querySelector('.btn-edit-lead').addEventListener('click', () => openEditLeadModal(lead));
@@ -820,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     leadLossesInput.value = 0;
     leadClosedInput.checked = false;
+    leadPaymentInput.value = 'Aguardando';
     
     document.querySelectorAll('input[name="lead-house"]').forEach(cb => {
       cb.checked = false;
@@ -849,6 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     leadLossesInput.value = lead.losses || 0;
     leadIndicationInput.value = lead.indication || "";
     leadClosedInput.checked = lead.isClosed || false;
+    leadPaymentInput.value = lead.paymentStatus || 'Aguardando';
 
     const completedSet = new Set(lead.completedHouses || []);
     document.querySelectorAll('input[name="lead-house"]').forEach(cb => {
@@ -873,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const losses = Number(leadLossesInput.value || 0);
     const indication = leadIndicationInput.value;
     const isClosed = leadClosedInput.checked;
+    const paymentStatus = leadPaymentInput.value;
     
     const completedHouses = Array.from(document.querySelectorAll('input[name="lead-house"]:checked'))
       .map(cb => cb.value);
@@ -886,6 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
       completedHouses,
       losses,
       isClosed,
+      paymentStatus,
       indication
     };
 
@@ -935,6 +953,30 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const data = await response.json();
         showToast(data.error || 'Erro ao alterar encerramento.', true);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro de conexão.', true);
+    }
+  }
+
+  async function fastToggleLeadPayment(id, paymentStatus) {
+    try {
+      const response = await fetch(`/api/admin/leads/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ paymentStatus })
+      });
+
+      if (response.ok) {
+        showToast(paymentStatus === 'Pago' ? 'Pagamento confirmado! ✅' : 'Pagamento alterado para aguardando. ⏳');
+        fetchLeads();
+      } else {
+        const data = await response.json();
+        showToast(data.error || 'Erro ao alterar pagamento.', true);
       }
     } catch (err) {
       console.error(err);

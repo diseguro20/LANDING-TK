@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS houses (
 -- 5. Migrate leads table to support multi-tenant
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE CASCADE;
 UPDATE leads SET user_id = 1 WHERE user_id IS NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Aguardando';
 
 -- Create leads table if it didn't exist
 CREATE TABLE IF NOT EXISTS leads (
@@ -71,6 +72,8 @@ CREATE TABLE IF NOT EXISTS leads (
   completed_houses JSONB DEFAULT '[]'::jsonb,
   losses NUMERIC DEFAULT 0,
   is_closed BOOLEAN DEFAULT FALSE,
+  payment_status TEXT DEFAULT 'Aguardando',
   indication TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
