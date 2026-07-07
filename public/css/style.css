@@ -848,3 +848,233 @@ strong {
   }
 }
 
+/* ==========================================
+   SIMULATOR TRIGGER BUTTON
+   ========================================== */
+.simulator-trigger-wrapper {
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed rgba(0, 255, 102, 0.15);
+  border-radius: 20px;
+  margin: 30px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  box-shadow: inset 0 0 40px rgba(0, 255, 102, 0.02);
+}
+
+.btn-simulator-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 22px 45px;
+  background: linear-gradient(135deg, #00ff66 0%, #00b347 100%);
+  color: #000;
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  font-weight: 900;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 255, 102, 0.25);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.5px;
+}
+
+.btn-simulator-trigger:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(0, 255, 102, 0.4);
+}
+
+.btn-simulator-trigger i {
+  font-size: 1.6rem;
+}
+
+.simulator-trigger-helper {
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  max-width: 500px;
+}
+
+/* ==========================================
+   IMMERSIVE POPUP MODAL (GLASSMORPHISM)
+   ========================================== */
+.sim-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.sim-modal-card {
+  background: rgba(17, 24, 39, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.9), 0 0 50px rgba(0, 255, 102, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: simScaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+@keyframes simScaleUp {
+  from { transform: scale(0.9) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.sim-modal-header {
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.sim-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sim-title-wrapper i {
+  font-size: 1.4rem;
+  color: var(--accent-neon, #00ff66);
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+}
+.sim-title-wrapper h2 {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sim-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 2.2rem;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: var(--transition);
+  line-height: 1;
+}
+.sim-close-btn:hover {
+  color: var(--text-white);
+  transform: scale(1.1);
+}
+
+.sim-modal-body {
+  padding: 30px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Live Floating Stats Dashboard */
+.sim-live-dashboard {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.sim-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.sim-stat-box {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.sim-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  margin-bottom: 4px;
+}
+
+.sim-stat-val {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-white);
+}
+
+.sim-stat-box.main-stat {
+  background: rgba(0, 255, 102, 0.02);
+  border-color: rgba(0, 255, 102, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.03);
+}
+
+.sim-stat-val.neon-green {
+  font-size: 2.2rem;
+  color: var(--accent-neon);
+  text-shadow: 0 0 25px rgba(0, 255, 102, 0.4);
+  line-height: 1.1;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Animation on Value Increment */
+.sim-val-bounce {
+  transform: scale(1.1);
+  color: #38bdf8 !important;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.6) !important;
+}
+
+.mini-instruction {
+  margin-top: -10px;
+  margin-bottom: -5px;
+}
+
+/* Responsive Overrides for Simulator Modal */
+@media (max-width: 768px) {
+  .btn-simulator-trigger {
+    font-size: 1.1rem;
+    padding: 18px 30px;
+    width: 100%;
+  }
+  .sim-modal-card {
+    max-height: 95vh;
+  }
+  .sim-modal-body {
+    padding: 20px;
+    gap: 15px;
+  }
+  .sim-stat-val.neon-green {
+    font-size: 1.7rem;
+  }
+  .sim-stat-val {
+    font-size: 1.3rem;
+  }
+}
+
+

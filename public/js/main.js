@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctaHelperText = document.getElementById('cta-helper-text');
   const countdownTimer = document.getElementById('countdown-timer');
   const heroMaxValue = document.getElementById('hero-max-value');
+  
+  // Simulator Popup Elements
+  const btnOpenSimulator = document.getElementById('btn-open-simulator');
+  const closeSimulatorBtn = document.getElementById('close-simulator-btn');
+  const simulatorModal = document.getElementById('simulator-modal');
 
   let whatsappBaseUrl = '';
   let availableHouses = [];
@@ -134,6 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update statistics UI
     selectedCountEl.textContent = selectedCount;
     
+    // Add immersive update animation on value change
+    estimatedProfitEl.classList.remove('sim-val-bounce');
+    void estimatedProfitEl.offsetWidth; // Force layout recalculation
+    estimatedProfitEl.classList.add('sim-val-bounce');
+    setTimeout(() => {
+      estimatedProfitEl.classList.remove('sim-val-bounce');
+    }, 200);
+    
     if (selectedCount > 0) {
       estimatedProfitEl.innerHTML = `R$ ${totalProfit.toFixed(2)}${bonus > 0 ? ` <span style="font-size: 0.85rem; color: #ff5e00; display: block; text-shadow: none; font-weight: bold;">(+R$ ${bonus} COMBO BONUS! 🔥)</span>` : ''}`;
       
@@ -194,6 +207,26 @@ document.addEventListener('DOMContentLoaded', () => {
         timeInSeconds--;
       }
     }, 1000);
+  }
+
+  // Simulator Modal bindings
+  if (btnOpenSimulator && closeSimulatorBtn && simulatorModal) {
+    btnOpenSimulator.addEventListener('click', () => {
+      simulatorModal.classList.remove('hide');
+      document.body.style.overflow = 'hidden';
+    });
+
+    closeSimulatorBtn.addEventListener('click', () => {
+      simulatorModal.classList.add('hide');
+      document.body.style.overflow = '';
+    });
+
+    simulatorModal.addEventListener('click', (e) => {
+      if (e.target === simulatorModal) {
+        simulatorModal.classList.add('hide');
+        document.body.style.overflow = '';
+      }
+    });
   }
 
   // Run

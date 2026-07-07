@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="/css/style.css?v=2.0">
+  <link rel="stylesheet" href="/css/style.css?v=3.0">
 </head>
 <body>
 
@@ -55,56 +55,15 @@
 
   <!-- Interactive Config Section -->
   <main class="interactive-section">
-    <div class="container">
-      
-      <!-- Banner de Aviso de Novas Casas -->
-      <div class="houses-notice-banner">
-        <i class="fa-solid fa-fire-flame-simple"></i>
-        <span>Toda semana chegam casas novas para você fazer sua renda extra!</span>
+    <div class="container text-center">
+      <div class="simulator-trigger-wrapper">
+        <button id="btn-open-simulator" class="btn-simulator-trigger">
+          <i class="fa-solid fa-calculator"></i>
+          SIMULAR BANCAS E LUCROS GRATUITOS
+          <span class="btn-glow-ring"></span>
+        </button>
+        <p class="simulator-trigger-helper">Clique no botão acima para escolher suas bancas e simular seu lucro extra em tempo real!</p>
       </div>
-
-      <!-- Grid of betting houses -->
-      <div class="houses-grid" id="houses-container">
-        <!-- Rendered dynamically by main.js -->
-        <div class="loading-spinner">
-          <div class="spinner"></div>
-          <p>Carregando casas disponíveis...</p>
-        </div>
-      </div>
-      
-      <!-- Dynamic Estimator Dashboard -->
-      <div class="estimator-card">
-        <div class="estimator-header">
-          <h3>SEU ACÚMULO DE BANCAS E GANHOS:</h3>
-        </div>
-        
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
-          <span class="progress-percent" id="progress-percent">0%</span>
-        </div>
-        
-        <div class="estimator-stats">
-          <div class="stat-box">
-            <span class="stat-label">Bancas a Resgatar</span>
-            <span class="stat-val" id="selected-count">0</span>
-          </div>
-          <div class="stat-box main-stat">
-            <span class="stat-label">Lucro Estimado</span>
-            <span class="stat-val neon-green" id="estimated-profit">R$ 0,00</span>
-          </div>
-        </div>
-
-        <!-- Pulse CTA Button -->
-        <div class="cta-container">
-          <a href="#" class="btn-cta disabled" id="btn-whatsapp" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i>
-            RESGATAR MINHAS BANCAS NO WHATSAPP
-            <span class="pulse-ring"></span>
-          </a>
-          <p class="cta-helper" id="cta-helper-text">Selecione pelo menos 1 casa acima para liberar seu link do WhatsApp!</p>
-        </div>
-      </div>
-      
     </div>
   </main>
 
@@ -225,7 +184,74 @@
     </div>
   </footer>
 
+  <!-- ==========================================
+       IMMERSIVE SIMULATOR POPUP (MODAL)
+       ========================================== -->
+  <div id="simulator-modal" class="sim-modal-overlay hide">
+    <div class="sim-modal-card">
+      <div class="sim-modal-header">
+        <div class="sim-title-wrapper">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <h2>Simulador de Bancas & Lucros</h2>
+        </div>
+        <button id="close-simulator-btn" class="sim-close-btn">&times;</button>
+      </div>
+      
+      <div class="sim-modal-body">
+        
+        <!-- Live Dashboard (Floating Glow Stats) -->
+        <div class="sim-live-dashboard">
+          <div class="sim-stats-grid">
+            <div class="sim-stat-box">
+              <span class="sim-stat-label">Bancas Escolhidas</span>
+              <span class="sim-stat-val" id="selected-count">0</span>
+            </div>
+            <div class="sim-stat-box main-stat">
+              <span class="sim-stat-label">Seu Lucro Estimado</span>
+              <span class="sim-stat-val neon-green" id="estimated-profit">R$ 0,00</span>
+            </div>
+          </div>
+          
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+            <span class="progress-percent" id="progress-percent">0%</span>
+          </div>
+        </div>
+
+        <div class="instruction-box mini-instruction" style="margin: 0;">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Selecione abaixo as casas de apostas onde você <strong>ainda NÃO tem conta</strong> criada:</span>
+        </div>
+
+        <!-- Banner de Aviso de Novas Casas -->
+        <div class="houses-notice-banner" style="margin-bottom: 5px;">
+          <i class="fa-solid fa-fire-flame-simple animate-pulse"></i>
+          <span>Toda semana chegam casas novas para você fazer sua renda extra!</span>
+        </div>
+
+        <!-- Grid of betting houses -->
+        <div class="houses-grid" id="houses-container">
+          <!-- Rendered dynamically by main.js -->
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Carregando casas disponíveis...</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Action Button -->
+        <div class="cta-container">
+          <a href="#" class="btn-cta disabled" id="btn-whatsapp" target="_blank">
+            <i class="fa-brands fa-whatsapp"></i>
+            RESGATAR MINHAS BANCAS NO WHATSAPP
+            <span class="pulse-ring"></span>
+          </a>
+          <p class="cta-helper" id="cta-helper-text">Selecione pelo menos 1 casa acima para liberar seu link do WhatsApp!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="/js/main.js"></script>
+  <script src="/js/main.js?v=3.0"></script>
 </body>
 </html>
