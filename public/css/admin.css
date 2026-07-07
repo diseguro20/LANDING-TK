@@ -1030,14 +1030,15 @@ tbody tr:hover {
   }
   
   /* Center loader row fallback */
-  .leads-table td.text-center, 
-  .houses-table td.text-center {
+  .leads-table td[colspan], 
+  .houses-table td[colspan] {
     justify-content: center !important;
     text-align: center !important;
     padding: 20px 0 !important;
+    display: block !important;
   }
-  .leads-table td.text-center::before, 
-  .houses-table td.text-center::before {
+  .leads-table td[colspan]::before, 
+  .houses-table td[colspan]::before {
     display: none !important;
   }
   
