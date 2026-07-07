@@ -591,8 +591,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size: 0.75rem; color: var(--text-muted);">${lead.whatsapp || '-'}</div>
         </td>
         <td data-label="Operador(a)">${lead.operator}</td>
-        <td data-label="Status"><span class="lead-status-badge">${lead.status}</span></td>
-        <td data-label="CPAs">
+        <td data-label="Status" class="text-center"><span class="lead-status-badge">${lead.status}</span></td>
+        <td data-label="CPAs" class="text-center">
           <span class="badge" style="background-color: var(--border-color); cursor: help;" title="${housesTooltip}">
             ${cpaCount} / ${housesData.length}
           </span>
@@ -600,10 +600,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <td data-label="Pagamento Lead"><strong style="color: var(--success);">R$ ${leadPay.toFixed(2)}</strong></td>
         <td data-label="Comissão OP"><strong style="color: var(--primary);">R$ ${opPay.toFixed(2)}</strong></td>
         <td data-label="Perdas" style="${lead.losses > 0 ? 'color: var(--danger); font-weight: 600;' : ''}">R$ ${lead.losses.toFixed(2)}</td>
-        <td data-label="Encerrado">
+        <td data-label="Encerrado" class="text-center">
           <input type="checkbox" class="toggle-closed-checkbox" data-id="${lead.id}" ${checkedAttr} style="width:16px; height:16px; cursor:pointer;">
         </td>
-        <td data-label="Pagamento">
+        <td data-label="Pagamento" class="text-center">
           <select class="toggle-payment-select" data-id="${lead.id}" style="background-color: var(--bg-darkest); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; cursor: pointer;">
             <option value="Aguardando" ${lead.paymentStatus === 'Aguardando' ? 'selected' : ''}>⏳ Aguardando</option>
             <option value="Pago" ${lead.paymentStatus === 'Pago' ? 'selected' : ''}>✅ Pago</option>

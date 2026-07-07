@@ -105,6 +105,7 @@ body {
   border-radius: 30px;
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--text-main);
+  white-space: nowrap;
 }
 
 /* Buttons */
@@ -638,6 +639,7 @@ tbody tr:hover {
   font-weight: 600;
   background-color: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
 }
 
 /* Custom styled selects in rows */
