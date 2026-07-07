@@ -802,3 +802,49 @@ strong {
     padding-top: 20px;
   }
 }
+
+/* Custom Notice Banner above Houses Grid */
+.houses-notice-banner {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 255, 102, 0.12);
+  border-left: 4px solid var(--accent-neon, #00ff66);
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.4s ease;
+}
+
+.houses-notice-banner i {
+  color: var(--accent-neon, #00ff66);
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+}
+
+.houses-notice-banner span {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-white, #fff);
+  line-height: 1.4;
+}
+
+/* Make banner stack vertically on small screens */
+@media (max-width: 600px) {
+  .houses-notice-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    padding: 15px;
+  }
+  .houses-notice-banner i {
+    font-size: 1.8rem;
+  }
+  .houses-notice-banner span {
+    font-size: 0.88rem;
+  }
+}
+
