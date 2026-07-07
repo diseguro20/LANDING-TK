@@ -370,7 +370,7 @@ textarea {
 .admin-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 900;
   background: rgba(7, 10, 19, 0.8);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
@@ -606,12 +606,12 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  padding: 16px 24px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-color);
 }
 
 td {
-  padding: 16px 24px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-color);
   font-size: 0.85rem;
   color: var(--text-main);
@@ -647,8 +647,8 @@ tbody tr:hover {
   background-color: rgba(9, 13, 22, 0.8) !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-main) !important;
-  font-size: 0.8rem !important;
-  padding: 6px 10px !important;
+  font-size: 0.75rem !important;
+  padding: 4px 6px !important;
   border-radius: 6px !important;
   cursor: pointer;
   width: auto;
